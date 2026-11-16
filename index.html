@@ -265,8 +265,8 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
 
 <header class="top">
   <h1>Pending &amp; Allotment</h1>
-  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v9.0 TEST</span>
-  <span class="chip" id="build">build 9.0</span>
+  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v9.1 TEST</span>
+  <span class="chip" id="build">build 9.1</span>
   <span class="chip" id="chip" title="Set Tracker connection">local</span>
 </header>
 <p class="sub-t">Your two pending reports, with stock already allotted against them.</p>
@@ -2787,7 +2787,7 @@ function adjust(key, d) {
 
 /* ---------- production priority ----------
    Ranks designs for repeat production, out of 100, on five criteria. Every
-   figure is worked out per design → colour → size group (0–3 / 4+) first;
+   figure is worked out per design → colour → size range (as recorded) first;
    a design's score is the demand-weighted average of its variants, and the
    variants stay visible so one strong colour cannot hide a weak one.
    This ranks designs for attention. It does not set quantities. */
@@ -2797,8 +2797,6 @@ const D_COLS = ['Delivery Challan Number', 'Date', 'Customer Name', 'Customer St
 const PW = { vel: 20, dem: 20, cov: 15, fifo: 20, mkt: 25 };
 const CORE_STATES = { 'maharashtra': 'Maharashtra', 'gujarat': 'Gujarat', 'madhya pradesh': 'Madhya Pradesh' };
 const LOT_TARGET_DAYS = 90;          // a lot is expected to sell through in about three months
-const GRP = { S: '0–3', L: '4+' };
-const grpOf = s => (Number(s) <= 3 ? 'S' : 'L');
 const anyDate = v => purchaseDate(v) || jDate(v);
 const clamp01 = x => Math.max(0, Math.min(1, x));
 
@@ -2844,87 +2842,63 @@ function marketOf(events) {
 }
 
 function prioBuild() {
-  const V = new Map();                         // design|color|grp -> variant
+  // every figure is taken per size range exactly as VastraApp records it (0-3, 0-8, 4-8 …)
+  const V = new Map();                         // design|color|range -> variant
   const vget = (d, c, g) => {
     const k = d + '|' + c + '|' + g;
-    if (!V.has(k)) V.set(k, { key: k, design: d, color: c, grp: g, events: [], lots: new Map(), pending: 0, stock: 0, setPcs: 0, sr: 0, dl: 0 });
+    if (!V.has(k)) V.set(k, { key: k, design: d, color: c, grp: g, events: [], lots: new Map(), pending: 0, stock: 0, stockRaw: 0, sr: 0, dl: 0 });
     return V.get(k);
   };
-  const ranges = new Map();                    // design|color -> ranges seen anywhere
-  const addRange = (dc, sizes) => {
-    if (!sizes || sizes.length < 2) return;
-    if (!ranges.has(dc)) ranges.set(dc, new Map());
-    ranges.get(dc).set(sizes.join(','), sizes);
-  };
+  const rangeOf = raw => { const sz = expandSize(raw); return sz ? rangeLabel(sz) : null; };
 
-  // deliveries: one event per challan line, split into size groups
+  // deliveries: one event per challan line, quantity as recorded
   let start = Infinity, asOf = 0;
   for (const r of (S.delRows || [])) {
     const d = stripDes(r['Design Number']); const c = normColor(r['Color']);
-    const sizes = expandSize(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Date']);
-    if (!d || !c || !sizes || !(q > 0) || !t) continue;
+    const g = rangeOf(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Date']);
+    if (!d || !c || !g || !(q > 0) || !t) continue;
     start = Math.min(start, t); asOf = Math.max(asOf, t);
-    addRange(d + '|' + c, sizes);
-    const per = spread(q, sizes); const by = { S: 0, L: 0 };
-    for (const s of sizes) by[grpOf(s)] += per[s];
-    for (const g of ['S', 'L']) if (by[g] > 0) vget(d, c, g).events.push({
-      t, pcs: by[g], cust: custKey(r['Customer Name']), name: normCust(r['Customer Name']),
+    vget(d, c, g).events.push({
+      t, pcs: q, cust: custKey(r['Customer Name']), name: normCust(r['Customer Name']),
       state: String(r['Customer State'] || '').trim().toLowerCase(), challan: String(r['Delivery Challan Number'] || '').trim(),
     });
   }
   if (!isFinite(start)) return null;
 
-  // purchase lots dated inside the delivery window; anything older folds into the opening lot
+  // purchase lots dated inside the delivery window, quantity as recorded; anything older folds into the opening lot
   for (const r of (S.purchRows || [])) {
     const d = stripDes(r['Design Name Without Prefix'] || r['Design Number']); const c = normColor(r['Color']);
-    const sizes = expandSize(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Purchase Date']);
-    if (!d || !c || !sizes || !(q > 0) || !t || t < start) continue;
-    addRange(d + '|' + c, sizes);
+    const g = rangeOf(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Purchase Date']);
+    if (!d || !c || !g || !(q > 0) || !t || t < start) continue;
     const lot = lotId(r['Challan No']) || 'no challan no.';
-    const per = spread(q, sizes); const by = { S: 0, L: 0 };
-    for (const s of sizes) by[grpOf(s)] += per[s];
-    for (const g of ['S', 'L']) if (by[g] > 0) {
-      const v = vget(d, c, g); const lk = lotId(r['Challan No']) ? lot : lot + '@' + t;
-      const L = v.lots.get(lk) || { lot, t, qty: 0 };
-      L.qty += by[g]; L.t = Math.min(L.t, t); v.lots.set(lk, L);
-    }
+    const v = vget(d, c, g); const lk = lotId(r['Challan No']) ? lot : lot + '@' + t;
+    const L = v.lots.get(lk) || { lot, t, qty: 0 };
+    L.qty += q; L.t = Math.min(L.t, t); v.lots.set(lk, L);
   }
 
-  // pending orders
+  // pending orders, per line as recorded
   for (const ln of (S.lines || [])) {
-    addRange(ln.design + '|' + ln.color, ln.sizes);
-    for (const s of ln.sizes) {
-      const k = ln.design + '|' + ln.color + '|' + grpOf(s);
-      if (V.has(k) || ln.perSize[s] > 0) vget(ln.design, ln.color, grpOf(s)).pending += ln.perSize[s];
-    }
+    const g = rangeLabel(ln.sizes);
+    if (ln.qty > 0) vget(ln.design, ln.color, g).pending += ln.qty;
   }
 
-  // stock as VastraApp reports it, and how much of it makes complete sets
-  const netted = S.netted || (S.stockRows ? netStock(S.stockRows, { stockColumn: 'Current Stock' }).stock : new Map());
-  for (const r of (S.stockRows || [])) addRange(stripDes(r['Design Name']) + '|' + normColor(r['Color Name']), expandSize(r['Size']));
-  for (const v of V.values()) {
-    const b = netted.get(v.design + '|' + v.color) || {};
-    for (const s of Object.keys(b)) if (grpOf(s) === v.grp) v.stock += b[s];
-  }
-  const done = new Set();
-  for (const v of V.values()) {
-    const dc = v.design + '|' + v.color;
-    if (done.has(dc)) continue; done.add(dc);
-    const b = netted.get(dc) || {};
-    const rs = ranges.has(dc) ? [...ranges.get(dc).values()] : [];
-    const cv = carve(b, rs);
-    const setBy = { S: 0, L: 0 };
-    for (const x of cv.sets) { const sz = expandSize(x.size) || []; for (const s of sz) setBy[grpOf(s)] += x.sets; }
-    for (const g of ['S', 'L']) { const w = V.get(dc + '|' + g); if (w) w.setPcs = setBy[g]; }
-  }
-  // returns, from the stock report's own lifetime totals
+  // stock, sales return and delivered — the stock report's own figures per range
+  const negs = new Map();                      // design|color -> ranges VastraApp shows below zero
   for (const r of (S.stockRows || [])) {
-    const sizes = expandSize(r['Size']); if (!sizes) continue;
-    const sr = Number(r['Sales Return'] || 0), dl = Number(r['Delivered Stock'] || 0);
-    if (!sr && !dl) continue;
+    const g = rangeOf(r['Size']); if (!g) continue;
     const d = stripDes(r['Design Name']), c = normColor(r['Color Name']);
-    const ps = spread(sr, sizes), pd = spread(dl, sizes);
-    for (const s of sizes) { const v = V.get(d + '|' + c + '|' + grpOf(s)); if (v) { v.sr += ps[s]; v.dl += pd[s]; } }
+    const cur = Number(r['Current Stock'] || 0);
+    const k = d + '|' + c + '|' + g;
+    if (cur < 0) { const dc = d + '|' + c; if (!negs.has(dc)) negs.set(dc, []); negs.get(dc).push({ g, sizes: expandSize(r['Size']), cur }); }
+    const v = V.get(k); if (!v) continue;
+    v.stockRaw += cur;
+    v.sr += Number(r['Sales Return'] || 0); v.dl += Number(r['Delivered Stock'] || 0);
+  }
+  for (const v of V.values()) {
+    v.stock = Math.max(0, v.stockRaw);
+    v.setPcs = v.stock;
+    const sz = expandSize(v.grp) || [];
+    v.brokenBy = (negs.get(v.design + '|' + v.color) || []).filter(n => n.g !== v.grp && n.sizes.every(s => sz.includes(s)));
   }
 
   // per-variant figures
@@ -2944,18 +2918,19 @@ function prioBuild() {
     v.sDem = v.dp / 20;
 
     // stock cover: complete sets only, less what pending orders already claim
-    v.saleable = Math.max(0, v.setPcs - v.pending);
+    v.saleable = Math.max(0, v.stock - v.pending);
     v.cover = v.forecast > 0 ? v.saleable / v.forecast : null;
     const w = v.cover;
     v.sCov = w == null ? 0 : w <= 1 ? 5 : w <= 2 ? 4 : w <= 4 ? 3 : w <= 8 ? 2 : w <= 12 ? 1 : 0;
 
     // FIFO — an estimate: deliveries are not linked to lots
     const bought = [...v.lots.values()].reduce((t, l) => t + l.qty, 0);
-    const openRaw = v.stock + v.sold - bought;
-    v.tallyGap = openRaw < 0 ? -openRaw : 0;
+    const openRaw = v.stockRaw + v.sold - bought;
+    // a range below zero in VastraApp was sold out of wider sets — that is not a purchase mismatch
+    v.tallyGap = Math.max(0, bought - v.sold - Math.max(0, v.stockRaw));
     const lots = [{ lot: 'Before ' + fmtDay(start), t: null, qty: Math.max(0, openRaw), sold: 0, open: true }]
       .concat([...v.lots.values()].sort((a, b) => a.t - b.t).map(l => ({ lot: l.lot, t: l.t, qty: l.qty, sold: 0 })));
-    let early = 0;
+    let early = 0, over = 0;
     for (const e of v.events) {
       let need = e.pcs;
       for (const L of lots) {
@@ -2968,8 +2943,9 @@ function prioBuild() {
         if (need <= 0) break;
         const take = Math.min(need, L.qty - L.sold); if (take > 0) { L.sold += take; need -= take; early += take; if (L.sold >= L.qty) L.outAt = e.t; }
       }
+      over += Math.max(0, need);
     }
-    v.early = early;
+    v.early = early; v.over = over;
     for (const L of lots) {
       L.left = L.qty - L.sold;
       L.age = Math.max(0, Math.round((asOf - (L.t == null ? start : L.t)) / DAY));
@@ -3014,10 +2990,13 @@ function prioBuild() {
     v.weight = v.pending + v.recent + v.prior;
     const wr = [];
     if (!(v.weekly8 > 0) && v.sold) wr.push('no sales in the last 8 weeks');
-    if (v.fifoEstOnly) wr.push('no lot purchased since ' + fmtDay(start) + ' — sell-through is from older stock');
+    if (v.fifoEstOnly && !(v.stockRaw < 0)) wr.push('no lot purchased since ' + fmtDay(start) + ' — sell-through is from older stock');
     if (v.tallyGap > 0) wr.push('purchases exceed stock plus sales by ' + Math.round(v.tallyGap) + ' pcs — check entries');
     if (v.early > 0) wr.push(Math.round(v.early) + ' pcs sold before their lot was entered');
-    if (v.stock > 0 && v.setPcs === 0) wr.push('only loose pieces in stock — no complete sets');
+    if (v.over > 0) wr.push(Math.round(v.over) + ' pcs sold more than purchased in ' + v.grp + ' — taken out of wider sets');
+    if (v.stockRaw < 0) wr.push('VastraApp stock is ' + Math.round(v.stockRaw) + ' in ' + v.grp);
+    if (v.brokenBy.length) wr.push('VastraApp shows ' + v.brokenBy.map(n => n.g + ' at ' + Math.round(n.cur)).join(' and ') +
+      ' — some ' + v.grp + ' sets are broken, so stock here may be overstated');
     if (v.retRate >= 0.1) wr.push('returns are ' + Math.round(v.retRate * 100) + '% of deliveries');
     if (v.mk.unknownShare >= 0.3) wr.push('state missing on ' + Math.round(v.mk.unknownShare * 100) + '% of sales');
     v.warn = wr;
@@ -3038,7 +3017,7 @@ function prioBuild() {
     const flags = [];
     if ((cls === 'P1' || cls === 'P2') && (mk.conf === 'conc' || mk.conf === 'thin')) flags.push('Trial repeat only — ' + C_LABEL[mk.conf].toLowerCase());
     const weak = vs.filter((v, i) => ws[i] / W >= 0.15 && v.cls === 'P4');
-    if ((cls === 'P1' || cls === 'P2') && weak.length) flags.push('Weak: ' + weak.map(v => title(v.color) + ' ' + GRP[v.grp]).join(', '));
+    if ((cls === 'P1' || cls === 'P2') && weak.length) flags.push('Weak: ' + weak.map(v => title(v.color) + ' ' + v.grp).join(', '));
     vs.forEach((v, i) => { v.share = ws[i] / W; });
     designs.push({
       design: d, score, cls, mk, flags, variants: vs.sort((a, b) => b.score - a.score),
@@ -3070,14 +3049,14 @@ function prioVariant(v) {
   const cell = (name, s, w, detail) =>
     '<div class="pc5"><span>' + name + ' <small>' + w + '%</small></span><b>' + f1(s) + '</b>' + sbar(s) + '<small>' + detail + '</small></div>';
   let h = '<div class="pv">' +
-    '<div class="pv-h"><b>' + esc(title(v.color)) + ' · ' + GRP[v.grp] + '</b>' +
+    '<div class="pv-h"><b>' + esc(title(v.color)) + ' · ' + esc(v.grp) + '</b>' +
     '<span class="pcls ' + v.cls.toLowerCase() + '">' + v.cls + ' · ' + Math.round(v.score) + '</span>' +
     '<span class="pconf c-' + v.mk.conf + '">' + C_LABEL[v.mk.conf] + '</span>' +
     '<span class="pv-sh">' + Math.round(v.share * 100) + '% of design demand</span></div>' +
     '<div class="pv-g">' +
     cell('Velocity', v.sVel, PW.vel, f1(v.weekly8) + ' pcs/wk · ' + momTxt) +
     cell('Demand', v.sDem, PW.dem, Math.round(v.dp) + '% · ' + Math.round(v.pending) + ' pending / ' + Math.round(v.stock) + ' in stock') +
-    cell('Cover', v.sCov, PW.cov, v.cover == null ? 'no recent sales to cover' : f1(v.cover) + ' wks · ' + Math.round(v.saleable) + ' pcs free in full sets') +
+    cell('Cover', v.sCov, PW.cov, v.cover == null ? 'no recent sales to cover' : f1(v.cover) + ' wks · ' + Math.round(v.saleable) + ' pcs free after pending') +
     cell('FIFO', v.sFifo, PW.fifo, Math.round(v.sellThrough * 100) + '% sold through · estimate') +
     cell('Market', v.sMkt, PW.mkt, v.mk.customers + ' customers · ' + (v.mk.regions.join(', ') || 'no state') +
       ' · ' + Math.round(v.mk.repRate * 100) + '% repeat · top ' + Math.round(v.mk.topShare * 100) + '%') +
@@ -3117,7 +3096,7 @@ function renderPrio() {
     if (b) b.textContent = (k === 'all' ? 'All ' + R.designs.length : k + ' · ' + counts[k]);
   });
 
-  let h = '<p class="exp">Sales from ' + fmtDay(R.start) + ' to ' + fmtDay(R.asOf) + '. Every design is scored per colour and size group (0–3 / 4+), ' +
+  let h = '<p class="exp">Sales from ' + fmtDay(R.start) + ' to ' + fmtDay(R.asOf) + '. Every design is scored per colour and size range as recorded in VastraApp, ' +
     'then averaged by demand. Lot figures are FIFO estimates — deliveries are not linked to lots. ' +
     'This ranks designs for attention; it does not set repeat quantities.</p>';
   if (!S.purchRows) h += '<div class="note">No purchase inward file loaded, so every lot counts as older stock and FIFO scores are rough.</div>';
@@ -3228,7 +3207,7 @@ $('#exportBtn').addEventListener('click', async () => {
     const pr = [];
     for (const d of PR.designs) for (const v of d.variants) pr.push({
       'Rank': d.rank, 'Design Name': 'DES-' + d.design, 'Design Score': Math.round(d.score), 'Design Class': d.cls,
-      'Market Confidence': C_LABEL[d.mk.conf], 'Colour': title(v.color), 'Size Group': GRP[v.grp],
+      'Market Confidence': C_LABEL[d.mk.conf], 'Colour': title(v.color), 'Size': v.grp,
       'Variant Score': Math.round(v.score), 'Variant Class': v.cls,
       'Velocity /5': +f1(v.sVel), 'Demand /5': +f1(v.sDem), 'Cover /5': +f1(v.sCov), 'FIFO /5': +f1(v.sFifo), 'Market /5': +f1(v.sMkt),
       'Sold 8 wks (pcs)': Math.round(v.recent + v.prior), 'Pending (pcs)': Math.round(v.pending), 'Stock (pcs)': Math.round(v.stock),
