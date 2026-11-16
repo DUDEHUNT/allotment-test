@@ -1,0 +1,3353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TEST · Pending &amp; Allotment</title>
+<style>
+:root{
+  --paper:#F2F4F3; --card:#FFFFFF; --ink:#16202A; --ink-2:#5A6B78;
+  --rule:#D3DAD9; --rule-2:#E8ECEB; --sub:#F6F8F7;
+  --good:#0F6E5C; --good-bg:#E4F0EC;
+  --short:#A8401F; --short-bg:#F7E9E3;
+  --w:#2D4A7C; --w-bg:#E5EAF3;
+  --amber:#8A6100; --amber-bg:#F6EEDC;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);
+  font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 80px}
+
+header.top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+header.top h1{font-size:22px;font-weight:640;letter-spacing:-.01em;margin:0}
+header.top .ver{color:var(--ink-2);font-size:12px}
+.sub-t{color:var(--ink-2);font-size:13.5px;margin:4px 0 18px;max-width:64ch}
+
+.intake{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.intake.three{grid-template-columns:1fr 1fr}
+@media(max-width:900px){.intake.three{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.intake,.intake.three{grid-template-columns:1fr}}
+.drop{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:14px 15px;cursor:pointer;display:block;position:relative}
+.drop:hover{border-color:var(--ink-2)}
+.drop.on{border-color:var(--good);background:var(--good-bg)}
+.drop .lab{font-weight:600;font-size:14px}
+.drop .hint{color:var(--ink-2);font-size:12.5px;margin-top:3px;display:block;word-break:break-word}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#stamp{display:flex;flex-direction:column;gap:2px;color:var(--ink-2);font-size:12.5px;margin-top:9px}
+#stamp b{color:var(--ink);font-weight:600;margin-right:2px}
+#stamp .st-old{color:var(--amber)}
+#stamp .st-old b{color:var(--amber)}
+#stamp .st-h{font-size:11.5px;margin-top:3px}
+
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0}
+button{font:inherit;font-size:14px;background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:7px 13px;cursor:pointer}
+button:hover{border-color:var(--ink-2)}
+button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--w);outline-offset:1px}
+select,input[type=text]{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--rule);border-radius:3px;background:var(--card);color:var(--ink)}
+label.inline{font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+#partyCount{color:var(--ink-2);font-size:12.5px}
+#partyWrap,#sourceWrap{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:14px 16px;margin:4px 0 6px}
+
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-top:16px;overflow-x:auto}
+nav.tabs button{border:none;border-bottom:2px solid transparent;background:none;border-radius:0;padding:9px 13px;color:var(--ink-2);white-space:nowrap;font-size:14px}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+section.panel{display:none;padding-top:18px}
+section.panel.show{display:block}
+
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--card)}
+/* no content-visibility here: row heights vary once colours wrap, and a wrong
+   size estimate shows as blank bands while scrolling */
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 11px;text-align:left;border-bottom:1px solid var(--rule-2);white-space:nowrap}
+th{background:var(--card);font-weight:600;font-size:12px;color:var(--ink-2);border-bottom:1px solid var(--rule)}
+@media(hover:hover) and (min-width:820px){th{position:sticky;top:0;z-index:1}}
+td.n,th.n{text-align:right}
+tbody tr:last-child td{border-bottom:none}
+tr.clik{cursor:pointer}
+@media(hover:hover){tr.clik:hover{background:#FAFBFB}}
+td.tw-x{width:22px;color:var(--ink-2);font-weight:600}
+tr.grp td{background:#EDF0EF;font-weight:600;font-size:12.5px}
+tr.sub-h td{background:var(--sub);font-size:11.5px;color:var(--ink-2);font-weight:600}
+tr.sub td{background:var(--sub);cursor:pointer}
+@media(hover:hover){tr.sub:hover td{background:#EFF3F1}}
+tr.detail td .nt-i{display:inline-block;margin-right:14px}
+tr.detail td .nt{margin-top:5px;padding-top:5px;border-top:1px dashed var(--rule)}
+tr.detail td{background:var(--sub);font-size:12.5px;color:var(--ink-2);white-space:normal}
+.dk{color:var(--ink);font-weight:600;margin-left:10px}
+tr.detail td .dk:first-child{margin-left:0}
+
+.tag{display:inline-block;padding:1px 6px;border-radius:2px;font-size:11.5px;font-weight:600;line-height:1.5}
+.t-W1,.t-W2{background:var(--w-bg);color:var(--w)}
+.t-R1,.t-R2{background:var(--good-bg);color:var(--good)}
+.t-R3{background:var(--rule-2);color:var(--ink-2)}
+.full{color:var(--good);font-weight:600}
+.none{color:var(--ink-2)}
+.bal{color:var(--short);font-weight:600}
+.ready{color:var(--good);font-weight:600}
+.pend{color:var(--ink-2);font-style:italic}
+
+.note{background:var(--amber-bg);border:1px solid #E4D3A8;border-radius:3px;padding:11px 13px;font-size:13.5px;margin:14px 0}
+.note.bad{background:var(--short-bg);border-color:#E8C4B4}
+.empty{color:var(--ink-2);padding:34px 16px;text-align:center;font-size:14px;background:var(--card);border:1px solid var(--rule);border-radius:3px}
+h2.sec{font-size:16px;font-weight:640;margin:0 0 8px}
+p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
+.fld{display:block;margin:10px 0}
+.fld span{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:4px}
+.fld input{width:100%}
+.hintline{font-size:12.5px;color:var(--ink-2)}
+/* production board — matches Set Tracker's status language */
+.sumline{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 14px;font-size:12.5px;color:var(--ink-2)}
+.sm{display:inline-flex;align-items:center;gap:5px}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:0 0 auto}
+.sdot.good{background:#1E8A55}.sdot.bad{background:#CF3B33}
+.sdot.warn{background:#C07A12}.sdot.done{background:#5B6470}
+.gt{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 7px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.gt .ct{font-weight:400}
+.lot{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:11px 13px;margin-bottom:7px;cursor:pointer}
+.lot.is-done{opacity:.62}
+.lot-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lot-h b{font-size:15px;letter-spacing:-.01em}
+.lot-m{font-size:12px;color:var(--ink-2)}
+.lot-h .ready,.lot-h .pend{margin-left:auto;font-size:12.5px}
+.star{color:#2563EB}
+.parts{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.pt{font-size:12px;padding:3px 8px;border-radius:3px;background:var(--good-bg);color:var(--good);white-space:nowrap}
+.pt-done{background:var(--rule-2);color:var(--ink-2)}
+.pt-empty{background:transparent;color:var(--ink-2);border:1px dashed var(--rule)}
+.lot-n{font-size:12px;color:var(--ink-2);margin-top:7px;font-style:italic}
+.bd{margin-top:11px;border-top:1px solid var(--rule-2);padding-top:10px}
+.bd-r{font-size:13px;margin-bottom:9px}
+.bd-t{color:var(--ink-2);font-size:12px;margin-left:7px}
+.bd-s{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.bd-s span{font-size:12px;padding:2px 7px;background:var(--sub);border:1px solid var(--rule-2);border-radius:3px}
+/* allotment */
+.ag{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:11px 13px;margin-bottom:8px}
+.ag-h{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;font-size:14px}
+.ag-h b{font-size:15px}
+.ag-t{margin-left:auto;font-size:12px;color:var(--ink-2)}
+.ag-l{font-size:12.5px;margin-top:6px;color:var(--ink)}
+.ag-l b{font-weight:600;color:var(--good)}
+.ag-x{font-weight:400;color:var(--ink-2);font-size:11.5px}
+.ag-v{font-size:11.5px;color:var(--ink-2);margin:4px 0 6px}
+.fits{color:var(--good)}
+.nofit{color:var(--short)}
+.ag-f{font-size:12px;color:var(--ink-2);margin:6px 0 4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fr{padding:2px 7px;border-radius:3px;background:var(--good-bg);color:var(--good);font-weight:600}
+.fr-0{background:var(--rule-2);color:var(--ink-2);font-weight:400}
+.ar{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid var(--rule-2)}
+.ar-n{flex:1 1 auto;min-width:0;font-size:13.5px}
+.ar-o{font-size:12px;color:var(--ink-2);margin-top:2px}
+.step{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.sb{width:36px;height:36px;padding:0;font-size:19px;line-height:1;display:flex;align-items:center;justify-content:center}
+.sv{min-width:26px;text-align:center;font-weight:600;color:var(--ink-2)}
+.sv.on{color:var(--good)}
+.ar-p{flex:0 0 52px;text-align:right;font-size:12.5px;color:var(--good);font-weight:600}
+.sz-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:12px 0 0;padding:7px 9px;background:var(--sub);border-radius:3px;font-size:12px;color:var(--ink-2)}
+.sz-h b{font-size:13.5px;color:var(--ink)}
+.pn{cursor:pointer;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.pn-c{font-size:10px;color:var(--ink-2);margin-left:4px;text-decoration:none;display:inline-block}
+.od{margin:-2px 0 8px;padding:7px 10px;background:var(--sub);border-radius:3px;font-size:12.5px;color:var(--ink-2)}
+.od-r{padding:3px 0}
+.od-r .dk{margin-left:0;margin-right:3px}
+.od-r .dk:nth-of-type(2){margin-left:8px}
+.od-q{color:var(--ink);margin-left:8px;white-space:nowrap}
+.ag-w{font-size:12px;color:var(--short);margin-top:7px}
+.ci{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-top:1px solid var(--rule-2);font-size:13.5px}
+.ci span:first-child{flex:1 1 auto}
+.ci-p{flex:0 0 58px;text-align:right;color:var(--ink-2);font-size:12.5px}
+.ct-t{border-top:1px solid var(--rule);margin-top:4px;padding-top:7px;font-weight:600;text-align:right;font-size:13.5px}
+.pr-sum{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:4px 0 12px;font-size:12.5px;color:var(--ink-2)}
+.pr-n{font-weight:600;color:var(--ink);padding:3px 10px;border:1px solid var(--rule);border-radius:12px;background:var(--card)}
+.pr-key{font-size:11.5px;color:var(--ink-2);margin:-2px 0 10px;padding:0 12px}
+.pc-stage{display:flex;flex-direction:column;line-height:1.15}
+.pc-s{white-space:nowrap}
+.pc-d{font-size:11px;font-weight:600;color:var(--w);margin-top:2px}
+.pc-dl{color:var(--short)}
+.pc sup{font-size:10px;margin-left:1px}
+.pr-up{display:inline-block;font-size:12.5px;color:var(--ink-2);text-decoration:underline;cursor:pointer;margin:-4px 0 10px}
+.pr-grid{display:grid;grid-template-columns:minmax(78px,1.25fr) repeat(4,minmax(0,1fr));gap:6px;align-items:center}
+.pr-head{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);padding:0 12px 6px}
+.pr-row{background:var(--card);border:1px solid var(--rule);border-radius:6px;margin-bottom:6px;padding:12px;cursor:pointer}
+.pr-row.open{border-color:var(--ink-2)}
+.pr-p{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+.pr-p b{font-size:15px;letter-spacing:-.01em;word-break:break-word}
+.pr-age{font-size:10.5px;color:var(--short);font-weight:600}
+.pc{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-ok{color:var(--good);font-size:16px}
+.pc-no{color:var(--rule);font-weight:400}
+.pc-date{color:var(--w)}
+.pc-late{color:var(--short)}
+.pc-stage{color:var(--amber);font-size:12px}
+.pr-d{margin-top:12px;border-top:1px solid var(--rule-2);padding-top:10px;cursor:default}
+.pr-meta{font-size:12px;color:var(--ink-2);margin-bottom:8px}
+.pr-c{margin-bottom:11px}
+.pr-ch{display:flex;gap:6px;align-items:baseline;font-size:13px;padding:5px 8px;background:var(--sub);border-radius:3px}
+.pr-ch span{margin-left:auto;font-size:12px;color:var(--ink-2)}
+.pr-at{display:flex;flex-wrap:wrap;gap:2px 10px;padding:6px 8px;border-bottom:1px solid var(--rule-2);font-size:12.5px}
+.pr-who{font-weight:600;min-width:120px}
+.pr-when{color:var(--ink-2);font-size:12px;width:100%}
+.pr-hist{font-size:12px;color:var(--ink-2);padding:6px 8px}
+.pr-o{display:flex;gap:10px;padding:5px 8px;border-bottom:1px solid var(--rule-2);font-size:12.5px}
+.pr-o span:first-child{flex:1}
+.pr-o span:nth-child(2){color:var(--ink-2)}
+@media(max-width:760px){.pr-grid{grid-template-columns:minmax(70px,1.3fr) repeat(4,minmax(0,1fr));gap:4px}.pr-row{padding:11px 9px}.pc{font-size:12px}}
+.pp{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:12px 13px;margin-bottom:7px;cursor:pointer}
+.pp.open{border-color:var(--ink-2)}
+.pp-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pp-h b{font-size:15.5px;letter-spacing:-.01em}
+.pp-r{font-size:12px;color:var(--ink-2);min-width:26px}
+.pp-s{margin-left:auto;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.pp-m{font-size:12.5px;color:var(--ink-2);margin-top:5px}
+.pp-f{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.pp-f span{font-size:12px;background:var(--amber-bg);color:var(--amber);padding:2px 8px;border-radius:3px;font-weight:600}
+.pcls{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:3px}
+.pcls.p1{background:var(--good);color:#fff}.pcls.p2{background:var(--good-bg);color:var(--good)}
+.pcls.p3{background:var(--amber-bg);color:var(--amber)}.pcls.p4{background:var(--rule-2);color:var(--ink-2)}
+.pconf{font-size:11.5px;padding:2px 7px;border-radius:10px;border:1px solid var(--rule);color:var(--ink-2)}
+.pconf.c-broad{border-color:var(--good);color:var(--good)}.pconf.c-conc{border-color:var(--short);color:var(--short)}
+.pconf.c-thin{border-style:dashed}
+.pp-d{margin-top:11px;border-top:1px solid var(--rule-2);padding-top:9px;cursor:default}
+.pv{padding:9px 0 11px;border-bottom:1px solid var(--rule-2)}
+.pv:last-child{border-bottom:none}
+.pv-h{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:13.5px}
+.pv-sh{margin-left:auto;font-size:11.5px;color:var(--ink-2)}
+.pv-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin-top:8px}
+.pc5{background:var(--sub);border-radius:4px;padding:7px 9px;display:flex;flex-direction:column;gap:2px}
+.pc5>span{font-size:11.5px;color:var(--ink-2)}
+.pc5>b{font-size:16px}
+.pc5>small{font-size:11.5px;color:var(--ink-2);line-height:1.35}
+.sb5{display:block;height:4px;background:var(--rule-2);border-radius:2px;overflow:hidden}
+.sb5>i{display:block;height:100%;background:var(--good)}
+.pv-w{display:flex;flex-direction:column;gap:3px;margin-top:7px}
+.pv-w span{font-size:12px;color:var(--amber)}
+.pv-w span::before{content:'⚠ '}
+.pl{margin-top:8px;font-size:12px}
+.pl-r{display:grid;grid-template-columns:minmax(0,2.2fr) repeat(5,minmax(0,1fr));gap:4px;padding:4px 0;border-bottom:1px dashed var(--rule-2)}
+.pl-r span:not(:first-child){text-align:right}
+.pl-r small{color:var(--ink-2)}
+.pl-hd{color:var(--ink-2);font-size:11px;border-bottom:1px solid var(--rule)}
+.pl-open{color:var(--ink-2);font-style:italic}
+.srch{display:flex;gap:6px;align-items:center;margin:0 0 14px}
+.srch input{flex:1 1 auto;font-size:15px;padding:9px 11px}
+.srch .clr{padding:9px 12px;color:var(--ink-2);font-size:17px;line-height:1}
+.hit{color:var(--ink-2);font-size:12.5px;margin:-6px 0 10px}
+.seg{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:12px 0}
+.seg-l{font-size:12.5px;color:var(--ink-2)}
+.seg-b{font-size:13px;padding:7px 12px;border:1px solid var(--rule);background:var(--card);border-radius:3px;color:var(--ink-2)}
+.seg-b.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+@media(max-width:760px){.seg-b{flex:1 1 0;padding:9px 6px;text-align:center}}
+.chip{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--rule-2);color:var(--ink-2)}
+.chip.live{background:var(--good-bg);color:var(--good)}
+.chip.wait{background:var(--amber-bg);color:var(--amber)}
+.chip.err{background:var(--short-bg);color:var(--short)}
+@media(max-width:760px){
+  .wrap{padding:16px 10px 70px}
+  .tw{overflow-x:hidden}
+  table{font-size:12.5px;width:100%}
+  th,td{padding:6px 4px;white-space:normal;word-break:break-word}
+  th{font-size:10.5px;letter-spacing:0}
+  th:first-child,td:first-child{padding-left:9px}
+  th:last-child,td:last-child{padding-right:9px}
+  tr.detail td{white-space:normal}
+  td.tw-x{width:18px;padding-right:0}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Pending &amp; Allotment</h1>
+  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v9.0 TEST</span>
+  <span class="chip" id="build">build 9.0</span>
+  <span class="chip" id="chip" title="Set Tracker connection">local</span>
+</header>
+<p class="sub-t">Your two pending reports, with stock already allotted against them.</p>
+
+<div class="intake three">
+  <label class="drop" id="dropOrders">
+    <span class="lab">Pending order file</span>
+    <span class="hint" id="hOrders">Design Wise Order Report — tap to choose</span>
+    <input type="file" id="fOrders" accept=".xlsx,.xls">
+  </label>
+  <label class="drop" id="dropStock">
+    <span class="lab">Stock file</span>
+    <span class="hint" id="hStock">Design Wise Stock Overall Detail — tap to choose</span>
+    <input type="file" id="fStock" accept=".xlsx,.xls">
+  </label>
+  <label class="drop" id="dropPurch">
+    <span class="lab">Purchase inward</span>
+    <span class="hint" id="hPurch">Purchase export — tells the app what is cut but unfinished</span>
+    <input type="file" id="fPurch" accept=".xlsx,.xls">
+  </label>
+  <label class="drop" id="dropDel">
+    <span class="lab">Delivery challans</span>
+    <span class="hint" id="hDel">Delivery challan export — sales history for Priority</span>
+    <input type="file" id="fDel" accept=".xlsx,.xls">
+  </label>
+  <label class="drop" id="dropTrack">
+    <span class="lab">Set Tracker board</span>
+    <span class="hint" id="hTrack">Reads the live board — or tap for an Export JSON</span>
+    <input type="file" id="fTrack" accept=".json">
+  </label>
+</div>
+<span id="stamp"></span>
+
+<div class="bar">
+  <label class="inline">Allot as
+    <select id="mode"><option value="sets" selected>whole sets</option><option value="pieces">loose pieces</option></select>
+  </label>
+  <label class="inline">Unassigned parties
+    <select id="defCat"><option value="R3">R3</option><option value="R2">R2</option><option value="R1">R1</option></select>
+  </label>
+  <label class="inline">Stock older than
+    <select id="ageDays"><option>21</option><option selected>30</option><option>45</option><option>60</option></select>
+    days is ready</label>
+  <button id="togSources" aria-expanded="false">Sheet links</button>
+  <button id="refresh">Refresh from sheet</button>
+  <button id="togParties" aria-expanded="false">Party categories</button>
+  <span id="partyCount"></span>
+  <button id="exportBtn" disabled>Export to Excel</button>
+  <button id="clear">Clear files</button>
+  <input type="file" id="fCats" accept=".json" class="sr">
+</div>
+
+<div id="sourceWrap" hidden><div id="sources"></div></div>
+<div id="partyWrap" hidden><div id="parties"></div></div>
+<div id="sheetmsg"></div>
+<div id="msg"></div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-p="cust" aria-selected="true">Customer wise pending</button>
+  <button role="tab" data-p="design" aria-selected="false">Design wise pending</button>
+  <button role="tab" data-p="prod" aria-selected="false">Production</button>
+  <button role="tab" data-p="allot" aria-selected="false">Allotment</button>
+  <button role="tab" data-p="prio" aria-selected="false">Priority</button>
+</nav>
+
+<section class="panel show" id="p-cust">
+  <div class="srch">
+    <input type="text" id="qCust" placeholder="Search customer, design or colour" autocomplete="off">
+    <button type="button" class="clr" id="clrCust" aria-label="Clear search">&times;</button>
+  </div>
+  <div id="cust-body"><div class="empty">Load the pending order file to see this report.</div></div>
+</section>
+<section class="panel" id="p-prio">
+  <div class="seg">
+    <button type="button" class="seg-b on" data-pclass="all">All</button>
+    <button type="button" class="seg-b" data-pclass="P1">P1</button>
+    <button type="button" class="seg-b" data-pclass="P2">P2</button>
+    <button type="button" class="seg-b" data-pclass="P3">P3</button>
+    <button type="button" class="seg-b" data-pclass="P4">P4</button>
+  </div>
+  <div class="srch">
+    <input type="text" id="qPrio" placeholder="Search design, colour or customer" autocomplete="off">
+    <button type="button" class="clr" id="clrPrio" aria-label="Clear search">&times;</button>
+  </div>
+  <div id="prio-body"><div class="empty">Load the delivery challan export to rank designs.</div></div>
+</section>
+<section class="panel" id="p-allot">
+  <div class="seg">
+    <button type="button" class="seg-b" data-asub="cust">Customer wise</button>
+    <button type="button" class="seg-b on" data-asub="design">Design wise</button>
+    <button type="button" class="seg-b" id="clrManual">Clear all</button>
+  </div>
+  <div class="srch">
+    <input type="text" id="qAllot" placeholder="Search customer, design or colour" autocomplete="off">
+    <button type="button" class="clr" id="clrAllot" aria-label="Clear search">&times;</button>
+  </div>
+  <div id="allot-body"><div class="empty">Load the pending order and stock files.</div></div>
+</section>
+<section class="panel" id="p-prod">
+  <div class="srch">
+    <input type="text" id="qProd" placeholder="Search design, lot, karigar or colour" autocomplete="off">
+    <button type="button" class="clr" id="clrProd" aria-label="Clear search">&times;</button>
+  </div>
+  <label class="pr-up">Load jobcard file<input type="file" id="fJobs" accept=".xlsx,.xls" class="sr"></label>
+  <div id="prod-body"><div class="empty">Paste the VastraApp jobcard export into a tab called “Jobslips” in your pending-order sheet.</div></div>
+</section>
+<section class="panel" id="p-design">
+  <div class="srch">
+    <input type="text" id="qDesign" placeholder="Search customer, design or colour" autocomplete="off">
+    <button type="button" class="clr" id="clrDesign" aria-label="Clear search">&times;</button>
+  </div>
+  <div id="design-body"><div class="empty">Load the pending order file to see this report.</div></div>
+</section>
+
+</div>
+<script>
+/* First thing on the page: any error at all becomes visible instead of a dead screen. */
+function fromExtension(x) {
+  var s = String((x && (x.stack || x.filename || x.message)) || x || '');
+  return /extension:\/\/|moz-extension|safari-web-extension|MetaMask/i.test(s);
+}
+window.addEventListener('error', function (ev) {
+  if (fromExtension(ev.error) || fromExtension(ev.filename)) return;
+  var m = document.getElementById('msg'); if (!m) return;
+  var t = ev.error && ev.error.stack ? ev.error.stack.split('\n').slice(0, 2).join(' — ') : ev.message;
+  m.innerHTML = '<div class="note bad"><b>Script error:</b> ' + String(t).replace(/</g, '&lt;') + '</div>';
+});
+
+/* External libraries load after the page is drawn, never in front of it.
+   Firestore's compat build needs the app build first, so those two chain. */
+function loadScript(src) {
+  return new Promise(function (res, rej) {
+    var s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = res;
+    s.onerror = function () { rej(new Error('could not load ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+function timeout(p, ms) {
+  return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timed out')); }, ms); })]);
+}
+var xlsxReady = timeout(loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'), 20000);
+var firebaseReady = timeout(
+  loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js')
+    .then(function () { return loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'); }),
+  20000);
+xlsxReady.catch(function () {});
+firebaseReady.catch(function () {});
+/* Allocation core — shared by the app and the Node test harness.
+   Everything here is pure: no DOM, no globals. */
+
+const CHAIN = ['W1', 'W2', 'R1', 'R2', 'R3'];
+const WHOLESALE = ['W1', 'W2'];
+const RETAIL = ['R1', 'R2'];
+
+/* ---------- size handling ---------- */
+
+// "0-8" -> [0..8]; "4" -> [4]; "Default"/"Mix"/"" -> null (unallocatable)
+function expandSize(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return null;
+  const m = s.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+  if (m) {
+    let a = +m[1], b = +m[2];
+    if (a > b) [a, b] = [b, a];
+    if (b - a > 30) return null;
+    const out = [];
+    for (let i = a; i <= b; i++) out.push(i);
+    return out;
+  }
+  if (/^\d+$/.test(s)) return [+s];
+  return null;
+}
+
+function rangeLabel(sizes) {
+  if (sizes.length === 1) return String(sizes[0]);
+  return sizes[0] + '-' + sizes[sizes.length - 1];
+}
+
+// Group a {size: qty} map into contiguous runs that share the same per-size qty.
+function toRanges(perSize) {
+  const sizes = Object.keys(perSize).map(Number).filter(s => perSize[s] > 0).sort((a, b) => a - b);
+  const out = [];
+  let run = null;
+  for (const s of sizes) {
+    const q = perSize[s];
+    if (run && s === run.last + 1 && q === run.qty) { run.last = s; run.sizes.push(s); }
+    else { if (run) out.push(run); run = { first: s, last: s, qty: q, sizes: [s] }; }
+  }
+  if (run) out.push(run);
+  return out.map(r => ({ size: rangeLabel(r.sizes), perSize: r.qty, pieces: r.qty * r.sizes.length }));
+}
+
+/* ---------- normalisation ---------- */
+
+const stripDes = d => String(d || '').trim().replace(/^DES[-\s]*/i, '');
+const normColor = (c, aliases) => {
+  const k = String(c || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return (aliases && aliases[k]) ? aliases[k] : k;
+};
+const normCust = n => String(n || '').trim().replace(/\s+/g, ' ');
+const custKey = n => normCust(n).toLowerCase();
+
+/* Spread a quantity evenly across sizes. Remainder lands on the smallest sizes
+   (negatives: remainder lands on the smallest sizes too, so signs stay consistent). */
+function spread(qty, sizes) {
+  const n = sizes.length;
+  const sign = qty < 0 ? -1 : 1;
+  const abs = Math.abs(qty);
+  const base = Math.floor(abs / n);
+  let rem = abs - base * n;
+  const out = {};
+  for (const s of sizes) {
+    let v = base;
+    if (rem > 0) { v += 1; rem -= 1; }
+    out[s] = sign * v;
+  }
+  return out;
+}
+
+/* ---------- stock netting ---------- */
+/* Returns Map "design|color" -> { perSize:{size:qty}, skipped:[rows] } */
+function netStock(stockRows, opts = {}) {
+  const aliases = opts.aliases || {};
+  const col = opts.stockColumn || 'Current Stock';
+  const map = new Map();
+  const skipped = [];
+  for (const r of stockRows) {
+    const design = stripDes(r['Design Name']);
+    const color = normColor(r['Color Name'], aliases);
+    const qty = Number(r[col] || 0);
+    if (!design || !color || color === 'no color' || !qty) continue;
+    const sizes = expandSize(r['Size']);
+    if (!sizes) { skipped.push({ design, color, size: r['Size'], qty }); continue; }
+    const key = design + '|' + color;
+    if (!map.has(key)) map.set(key, {});
+    const bucket = map.get(key);
+    const parts = spread(qty, sizes);
+    for (const s of sizes) bucket[s] = (bucket[s] || 0) + parts[s];
+  }
+  // clamp negatives away after netting
+  for (const [, bucket] of map) for (const s of Object.keys(bucket)) if (bucket[s] < 0) bucket[s] = 0;
+  return { stock: map, skipped };
+}
+
+/* ---------- demand ---------- */
+/* Returns array of line objects with per-size demand. */
+function buildDemandCore(orderRows, opts = {}) {
+  const aliases = opts.aliases || {};
+  const lines = [];
+  const skipped = [];
+  orderRows.forEach((r, i) => {
+    const qty = Number(r['Pending Qty.'] || 0);
+    if (!(qty > 0)) return;
+    const design = stripDes(r['Design Name']);
+    const color = normColor(r['Color'], aliases);
+    const sizes = expandSize(r['Size']);
+    if (!sizes || !design) { skipped.push({ row: i + 2, design, color, size: r['Size'], qty }); return; }
+    lines.push({
+      id: i,
+      order: r['Order Number'] || '',
+      date: parseDate(r['Order Date']),
+      dateRaw: r['Order Date'] || '',
+      expected: r['Expected Date'] || '',
+      customer: normCust(r['Customer Name']),
+      ckey: custKey(r['Customer Name']),
+      design, color,
+      sizeLabel: String(r['Size'] || '').trim(),
+      sizes,
+      qty,
+      perSize: spread(qty, sizes),
+      agent: r['Agent Name'] || '',
+      tag: r['Tag'] || '',
+      notes: (() => {
+        const seen = new Set(), out = [];
+        for (const k of Object.keys(r)) {
+          if (!isNoteCol(k)) continue;
+          const t = String(r[k] == null ? '' : r[k]).trim();
+          if (!t || seen.has(t.toLowerCase())) continue;
+          seen.add(t.toLowerCase()); out.push({ label: k.trim(), text: t });
+        }
+        return out;
+      })(),
+    });
+  });
+  return { lines, skipped };
+}
+
+function parseDate(s) {
+  if (!s) return 0;
+  const m = String(s).match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+  if (m) {
+    const mo = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].toLowerCase());
+    if (mo >= 0) return Date.UTC(+m[3], mo, +m[1]);
+  }
+  const d = Date.parse(s);
+  return isNaN(d) ? 0 : d;
+}
+
+/* ---------- the waterfall ---------- */
+/*
+  Per design + colour + individual size:
+    retailReserve = min(retail demand, ceil(0.25 * A))       retail floor
+    wholesaleAvail = min(A - retailReserve, floor(0.75 * A))  wholesale ceiling
+    W1 then W2 draw from wholesaleAvail
+    remaining splits 50/50 between R1 and R2 (each capped by its own demand)
+    leftovers cascade W1 -> W2 -> R1 -> R2 -> R3
+  Within a tier, customers are served by the tie-break rule (fifo | prorata).
+*/
+function allocate(lines, stockMap, opts = {}) {
+  const catOf = opts.categories || {};        // ckey -> 'W1'|'W2'|'R1'|'R2'|'R3'
+  const defaultCat = opts.defaultCategory || 'R2';
+  const tieBreak = opts.tieBreak || 'fifo';
+  const wholesaleCapPct = opts.wholesaleCapPct != null ? opts.wholesaleCapPct : 0.75;
+  const retailFloorPct = opts.retailFloorPct != null ? opts.retailFloorPct : 0.25;
+
+  // index demand by design|color|size
+  const cells = new Map();
+  for (const ln of lines) {
+    for (const s of ln.sizes) {
+      const key = ln.design + '|' + ln.color + '|' + s;
+      if (!cells.has(key)) cells.set(key, []);
+      cells.get(key).push({ line: ln, want: ln.perSize[s], got: 0 });
+    }
+  }
+
+  const alloc = new Map();  // lineId -> {size: qty}
+  const give = (claim, n, size) => {
+    if (n <= 0) return 0;
+    const take = Math.min(n, claim.want - claim.got);
+    if (take <= 0) return 0;
+    claim.got += take;
+    if (!alloc.has(claim.line.id)) alloc.set(claim.line.id, {});
+    const a = alloc.get(claim.line.id);
+    a[size] = (a[size] || 0) + take;
+    return take;
+  };
+
+  const stats = { cells: 0, allocated: 0, available: 0, demanded: 0, swept: 0, capped: 0 };
+
+  // Process cells grouped by design+colour so the R1/R2 rounding remainder can be
+  // carried across that group's sizes. Without this, a cell holding 1 piece always
+  // rounds R1's half down to 0 and R2 silently wins every size.
+  const carry = new Map();
+  const orderedKeys = [...cells.keys()].sort();
+
+  for (const key of orderedKeys) {
+    const claims = cells.get(key);
+    const [design, color, sizeStr] = key.split('|');
+    const size = Number(sizeStr);
+    const bucket = stockMap.get(design + '|' + color);
+    let A = bucket ? (bucket[size] || 0) : 0;
+    const totalWant = claims.reduce((t, c) => t + c.want, 0);
+    stats.cells++; stats.available += A; stats.demanded += totalWant;
+    if (A <= 0) continue;
+
+    const byCat = {};
+    for (const c of CHAIN) byCat[c] = [];
+    for (const c of claims) {
+      const cat = catOf[c.line.ckey] || defaultCat;
+      (byCat[cat] || byCat[defaultCat]).push(c);
+    }
+    for (const c of CHAIN) byCat[c] = orderClaims(byCat[c], tieBreak);
+
+    const wantOf = cat => byCat[cat].reduce((t, c) => t + (c.want - c.got), 0);
+    const retailWant = wantOf('R1') + wantOf('R2');
+
+    const retailReserve = Math.min(retailWant, Math.ceil(retailFloorPct * A));
+    const wholesaleAvail = Math.min(A - retailReserve, Math.floor(wholesaleCapPct * A));
+
+    let pool = wholesaleAvail;
+    for (const cat of WHOLESALE) pool -= serve(byCat[cat], pool, size, give, tieBreak);
+    const usedWholesale = wholesaleAvail - pool;
+
+    let retailPool = A - usedWholesale;
+    const gkey = design + '|' + color;
+    const exact = retailPool / 2 + (carry.get(gkey) || 0);
+    const r1Share = Math.min(retailPool, Math.floor(exact));
+    carry.set(gkey, exact - r1Share);
+    const shares = { R1: r1Share, R2: retailPool - r1Share };
+    let used = 0;
+    for (const cat of RETAIL) used += serve(byCat[cat], shares[cat], size, give, tieBreak);
+
+    // cascade leftovers down the chain, then to R3
+    let left = A - usedWholesale - used;
+    for (const cat of CHAIN) {
+      if (left <= 0) break;
+      left -= serve(byCat[cat], left, size, give, tieBreak);
+    }
+    // final sweep back up the chain so nothing sits idle while demand exists
+    if (left > 0) {
+      for (const cat of CHAIN) {
+        if (left <= 0) break;
+        const before = left;
+        left -= serve(byCat[cat], left, size, give, tieBreak);
+        stats.swept += before - left;
+      }
+    }
+    stats.allocated += A - left;
+  }
+
+  return { alloc, stats };
+}
+
+function orderClaims(list, tieBreak) {
+  if (tieBreak === 'prorata') return list.slice();
+  return list.slice().sort((a, b) => (a.line.date - b.line.date) || (a.line.id - b.line.id));
+}
+
+// Hand out `budget` pieces to a tier's claims. Returns how many were used.
+function serve(claims, budget, size, give, tieBreak) {
+  if (budget <= 0 || !claims.length) return 0;
+  let used = 0;
+  if (tieBreak === 'prorata') {
+    const open = claims.filter(c => c.want > c.got);
+    const total = open.reduce((t, c) => t + (c.want - c.got), 0);
+    if (!total) return 0;
+    if (budget >= total) { for (const c of open) used += give(c, c.want - c.got, size); return used; }
+    // largest-remainder apportionment
+    const raw = open.map(c => ((c.want - c.got) * budget) / total);
+    const floors = raw.map(Math.floor);
+    let rem = budget - floors.reduce((a, b) => a + b, 0);
+    const order = raw.map((v, i) => [v - floors[i], i]).sort((a, b) => b[0] - a[0]);
+    for (let k = 0; k < rem; k++) floors[order[k % order.length][1]]++;
+    open.forEach((c, i) => { used += give(c, floors[i], size); });
+    return used;
+  }
+  for (const c of claims) {
+    if (used >= budget) break;
+    used += give(c, budget - used, size);
+  }
+  return used;
+}
+
+/* ---------- full-set-only customers ---------- */
+/* Release allocations for customers who won't accept partials unless the line is fully covered. */
+function enforceFullOnly(lines, alloc, fullOnly) {
+  const released = [];
+  for (const ln of lines) {
+    if (!fullOnly[ln.ckey]) continue;
+    const a = alloc.get(ln.id);
+    if (!a) continue;
+    const got = Object.values(a).reduce((t, v) => t + v, 0);
+    if (got < ln.qty) { alloc.delete(ln.id); released.push({ line: ln, got }); }
+  }
+  return released;
+}
+
+/* ---------- report builders ---------- */
+
+function designWiseReport(lines) {
+  const map = new Map();
+  for (const ln of lines) {
+    const key = ln.design + '|' + ln.color + '|' + ln.sizeLabel;
+    if (!map.has(key)) map.set(key, { design: ln.design, color: ln.color, size: ln.sizeLabel, qty: 0 });
+    map.get(key).qty += ln.qty;
+  }
+  return [...map.values()].sort(cmpDCS);
+}
+
+function customerWiseReport(lines) {
+  const map = new Map();
+  for (const ln of lines) {
+    const key = ln.ckey + '|' + ln.design + '|' + ln.color + '|' + ln.sizeLabel;
+    if (!map.has(key)) map.set(key, { customer: ln.customer, design: ln.design, color: ln.color, size: ln.sizeLabel, qty: 0 });
+    map.get(key).qty += ln.qty;
+  }
+  return [...map.values()].sort((a, b) => a.customer.localeCompare(b.customer) || cmpDCS(a, b));
+}
+
+function cmpDCS(a, b) {
+  return a.design.localeCompare(b.design, undefined, { numeric: true })
+    || a.color.localeCompare(b.color)
+    || String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+}
+
+/* Per-line allocation result rolled back up into size ranges. */
+function allocationRows(lines, alloc, catOf, defaultCat) {
+  const rows = [];
+  for (const ln of lines) {
+    const a = alloc.get(ln.id) || {};
+    const got = Object.values(a).reduce((t, v) => t + v, 0);
+    rows.push({
+      customer: ln.customer,
+      category: catOf[ln.ckey] || defaultCat,
+      design: ln.design,
+      color: ln.color,
+      size: ln.sizeLabel,
+      order: ln.order,
+      date: ln.dateRaw,
+      ordered: ln.qty,
+      allocated: got,
+      balance: ln.qty - got,
+      ranges: toRanges(a),
+      lineId: ln.id,
+      notes: ln.notes || [],
+    });
+  }
+  return rows;
+}
+
+const CORE = {
+  CHAIN, expandSize, toRanges, stripDes, normColor, normCust, custKey, spread,
+  netStock, buildDemandCore, allocate, enforceFullOnly,
+  designWiseReport, customerWiseReport, allocationRows, parseDate,
+};
+
+
+/* Set-preserving allocation.
+   A claim is served only in whole blocks: one block = one full traverse of the
+   order's own size range at its per-size rate. An order for 0-10 qty 22 is two
+   blocks of 11. Nothing gets a broken set. */
+
+
+function allocateSets(lines, stockMap, opts = {}) {
+  const catOf = opts.categories || {};
+  const defaultCat = opts.defaultCategory || 'R2';
+  const wholesaleCapPct = opts.wholesaleCapPct != null ? opts.wholesaleCapPct : 0.75;
+  const retailFloorPct = opts.retailFloorPct != null ? opts.retailFloorPct : 0.25;
+
+  const groups = new Map();
+  for (const ln of lines) {
+    const k = ln.design + '|' + ln.color;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(ln);
+  }
+
+  const alloc = new Map();
+  const stats = { groups: 0, allocated: 0, available: 0, demanded: 0, blockedByShape: 0 };
+  const carry = new Map();
+
+  for (const [gkey, glines] of groups) {
+    const bucket = stockMap.get(gkey);
+    const avail = {};
+    let A = 0;
+    if (bucket) for (const s of Object.keys(bucket)) { avail[s] = bucket[s]; A += bucket[s]; }
+    const demanded = glines.reduce((t, l) => t + l.qty, 0);
+    stats.groups++; stats.available += A; stats.demanded += demanded;
+    if (A <= 0) continue;
+
+    const claims = glines.map(ln => ({
+      line: ln,
+      per: ln.perSize,
+      blockCost: ln.sizes.reduce((t, s) => t + ln.perSize[s], 0),
+      blocksWanted: Math.max(1, Math.round(ln.qty / ln.sizes.reduce((t, s) => t + ln.perSize[s], 0))),
+      blocksGot: 0,
+      cat: catOf[ln.ckey] || defaultCat,
+    }));
+
+    const byCat = {};
+    for (const c of CHAIN) byCat[c] = [];
+    for (const c of claims) (byCat[c.cat] || byCat[defaultCat]).push(c);
+    for (const c of CHAIN) byCat[c].sort((a, b) => (a.line.date - b.line.date) || (a.line.id - b.line.id));
+
+    const openPieces = cat => byCat[cat].reduce((t, c) => t + (c.blocksWanted - c.blocksGot) * c.blockCost, 0);
+
+    const canTake = c => c.line.sizes.every(s => (avail[s] || 0) >= c.per[s]);
+    const take = c => {
+      for (const s of c.line.sizes) avail[s] -= c.per[s];
+      c.blocksGot++;
+      const a = alloc.get(c.line.id) || {};
+      for (const s of c.line.sizes) a[s] = (a[s] || 0) + c.per[s];
+      alloc.set(c.line.id, a);
+      return c.blockCost;
+    };
+
+    // Serve a tier from a piece budget, in whole blocks only.
+    const serve = (cat, budget) => {
+      let used = 0;
+      let progress = true;
+      while (progress && used < budget) {
+        progress = false;
+        for (const c of byCat[cat]) {
+          if (c.blocksGot >= c.blocksWanted) continue;
+          if (used + c.blockCost > budget) continue;
+          if (!canTake(c)) continue;
+          used += take(c);
+          progress = true;
+        }
+      }
+      return used;
+    };
+
+    // Percentage caps only make sense when there is enough stock for every tier
+    // with demand to receive at least one whole block. Below that, splitting the
+    // stock strands it — nobody's block fits — so priority order decides outright.
+    let need = 0;
+    for (const cat of CHAIN) {
+      const open = byCat[cat].filter(c => c.blocksGot < c.blocksWanted);
+      if (open.length) need += Math.min(...open.map(c => c.blockCost));
+    }
+    if (A < need) {
+      let leftThin = A;
+      for (const cat of CHAIN) {
+        if (leftThin <= 0) break;
+        leftThin -= serve(cat, leftThin);
+      }
+      stats.allocated += A - leftThin;
+      stats.thinGroups = (stats.thinGroups || 0) + 1;
+      if (leftThin > 0) stats.blockedByShape += leftThin;
+      continue;
+    }
+
+    const retailWant = openPieces('R1') + openPieces('R2');
+    const retailReserve = Math.min(retailWant, Math.ceil(retailFloorPct * A));
+    const wholesaleAvail = Math.min(A - retailReserve, Math.floor(wholesaleCapPct * A));
+
+    let usedW = 0;
+    for (const cat of WHOLESALE) usedW += serve(cat, wholesaleAvail - usedW);
+
+    const retailPool = A - usedW;
+    const exact = retailPool / 2 + (carry.get(gkey) || 0);
+    const r1Share = Math.min(retailPool, Math.floor(exact));
+    carry.set(gkey, exact - r1Share);
+    const shares = { R1: r1Share, R2: retailPool - r1Share };
+    let usedR = 0;
+    for (const cat of RETAIL) usedR += serve(cat, shares[cat]);
+
+    // cascade, then sweep — nothing idle while a whole block still fits
+    let left = A - usedW - usedR;
+    for (let pass = 0; pass < 2 && left > 0; pass++) {
+      for (const cat of CHAIN) {
+        if (left <= 0) break;
+        left -= serve(cat, left);
+      }
+    }
+    stats.allocated += A - left;
+    if (left > 0 && glines.some(l => (alloc.get(l.id) ? sum(alloc.get(l.id)) : 0) < l.qty)) {
+      stats.blockedByShape += left;
+    }
+  }
+
+  return { alloc, stats };
+}
+
+const sum = o => Object.values(o).reduce((a, b) => a + b, 0);
+
+
+/* ----------------------------------------------------------------
+   LOT LEDGER
+   Purchase entries are made at cutting, so Current Stock counts
+   fabric that isn't a sellable set yet. Any lot with open stages on
+   the board is work in progress: its purchase quantity is subtracted
+   from stock and re-published as an arrival on the board's date.
+------------------------------------------------------------------ */
+
+/* "1219 - 9 (Washing)" -> "1219-9"   "1306 (0-3)" -> "1306" */
+function lotId(label) {
+  return String(label || '').replace(/\(.*$/, '').trim().replace(/\s*-\s*/g, '-');
+}
+
+/* "20 Jul, 2026" -> ms */
+const MON = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+function purchaseDate(v) {
+  const m = String(v || '').match(/(\d{1,2})\s+([A-Za-z]{3})[^\d]*(\d{4})/);
+  if (!m) return null;
+  const mo = MON[m[2].toLowerCase()];
+  return mo === undefined ? null : Date.UTC(+m[3], mo, +m[1]);
+}
+const DAY = 86400000;
+
+const Lots = {
+  wip: null,        // "design|color" -> {size: pieces still being made}
+  arrivals: null,   // "design|color|size" -> [{lot, pieces, due}]
+  openLots: [],
+  unmatched: [],
+  toAdd: [],        // cut recently, not on the board — needs tracking
+  recent: [],       // every lot cut inside the age window, board or not
+  all: null,        // every lot the purchase file knows, by id
+  ageDays: 30,
+
+  build(purchaseRows, tracker, aliases, ageDays) {
+    this.ageDays = ageDays || 30;
+    this.wip = new Map();
+    this.arrivals = new Map();
+    this.openLots = [];
+    this.unmatched = [];
+    this.toAdd = [];
+    this.recent = [];
+    this.all = new Map();
+    if (!purchaseRows) return this;
+
+    const parts = {};
+    for (const c of ((tracker && tracker.categories) || [])) parts[c.id] = (c.parts || []).map(p => p.key);
+
+    // index purchase rows by lot, and note when each was cut
+    const byLot = new Map();
+    const cutOn = new Map();
+    for (const r of purchaseRows) {
+      const id = lotId(r['Challan No']);
+      if (!id) continue;
+      if (!byLot.has(id)) byLot.set(id, []);
+      byLot.get(id).push(r);
+      const d = purchaseDate(r['Purchase Date']);
+      if (d && (!cutOn.has(id) || d > cutOn.get(id))) cutOn.set(id, d);
+    }
+
+    // what the board says, one entry per lot even if it holds duplicate rows
+    const onBoard = new Map();
+    const open = new Map();
+    for (const s of ((tracker && tracker.sets) || [])) {
+      const id = lotId(s.pattern);
+      if (!id) continue;
+      onBoard.set(id, true);
+      const req = parts[s.catId] || [];
+      const done = new Set(s.done || []);
+      const stillOpen = req.filter(k => !done.has(k));
+      if (!stillOpen.length) continue;
+      // a dash means that stage has not started, so the lot cannot be dated at all
+      const dates = stillOpen.map(k => (s.dates || {})[k]);
+      const due = dates.every(Boolean) ? dates.slice().sort().slice(-1)[0] : null;
+      const prev = open.get(id);
+      if (!prev || (due && (!prev.due || due < prev.due))) open.set(id, { id, due, label: s.pattern });
+    }
+
+    // A lot cut less than ageDays ago has almost certainly not come back yet.
+    // If it is not on the board, it is untracked production: hold it back and
+    // list it so it can be added.
+    const cutoff = Date.now() - this.ageDays * DAY;
+    for (const [id, when] of cutOn) {
+      if (onBoard.has(id)) continue;
+      if (when >= cutoff) {
+        open.set(id, { id, due: null, label: id, offBoard: true, cut: when });
+      }
+    }
+
+    for (const [id, info] of open) {
+      const rows = byLot.get(id);
+      if (!rows) { this.unmatched.push(info); continue; }
+      let pieces = 0;
+      for (const r of rows) {
+        const design = stripDes(r['Design Name Without Prefix'] || r['Design Number']);
+        const color = normColor(r['Color'], aliases);
+        const qty = Number(r['Quantity'] || 0);
+        const sizes = expandSize(r['Size']);
+        if (!design || !color || !qty || !sizes) continue;
+        const per = spread(qty, sizes);
+        const gk = design + '|' + color;
+        if (!this.wip.has(gk)) this.wip.set(gk, {});
+        const bucket = this.wip.get(gk);
+        for (const s of sizes) {
+          bucket[s] = (bucket[s] || 0) + per[s];
+          const ak = gk + '|' + s;
+          if (!this.arrivals.has(ak)) this.arrivals.set(ak, new Map());
+          const byLotHere = this.arrivals.get(ak);
+          // one purchase lot can cover a size through several overlapping ranges
+          const cur = byLotHere.get(id) || { lot: info.label, pieces: 0, due: info.due };
+          cur.pieces += per[s];
+          byLotHere.set(id, cur);
+        }
+        pieces += qty;
+      }
+      this.openLots.push({
+        id, label: info.label, due: info.due, pieces,
+        offBoard: !!info.offBoard, cut: cutOn.get(id) || null,
+      });
+      if (info.offBoard) this.toAdd.push({ id, pieces, cut: cutOn.get(id), rows });
+    }
+
+    for (const [k, m] of this.arrivals) {
+      this.arrivals.set(k, [...m.values()].sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999')));
+    }
+    // every lot purchase knows about, so a board row can show its contents
+    // however long ago it was cut
+    for (const [id, rows] of byLot) {
+      this.all.set(id, {
+        id, cut: cutOn.get(id) || null, rows,
+        pieces: rows.reduce((t, r) => t + (Number(r['Quantity']) || 0), 0),
+      });
+    }
+
+    // everything cut inside the window, whether or not the board knows about it
+    for (const [id, when] of cutOn) {
+      if (when < cutoff) continue;
+      const rows = byLot.get(id) || [];
+      this.recent.push({
+        id, cut: when, onBoard: onBoard.has(id),
+        pieces: rows.reduce((t, r) => t + (Number(r['Quantity']) || 0), 0),
+        rows,
+      });
+    }
+    this.recent.sort((a, b) => (b.cut || 0) - (a.cut || 0));
+    this.openLots.sort((a, b) => b.pieces - a.pieces);
+    this.toAdd.sort((a, b) => (b.cut || 0) - (a.cut || 0));
+    return this;
+  },
+
+  /* netted stock minus work in progress */
+  freeStock(stockMap) {
+    if (!this.wip || !this.wip.size) return { free: stockMap, held: 0 };
+    const free = new Map();
+    let held = 0;
+    for (const [k, bucket] of stockMap) {
+      const w = this.wip.get(k) || {};
+      const out = {};
+      for (const s of Object.keys(bucket)) {
+        const take = Math.min(bucket[s], w[s] || 0);
+        held += take;
+        const left = bucket[s] - take;
+        if (left > 0) out[s] = left;
+      }
+      if (Object.keys(out).length) free.set(k, out);
+    }
+    return { free, held };
+  },
+
+  /* lot contents as the purchase entry recorded them */
+  breakdown(rows) {
+    const out = new Map();
+    for (const r of rows) {
+      const design = stripDes(r['Design Name Without Prefix'] || r['Design Number']);
+      const color = String(r['Color'] || '').trim() || '—';
+      const size = String(r['Size'] || '').trim() || '—';
+      const qty = Number(r['Quantity'] || 0);
+      if (!qty) continue;
+      const k = design + '|' + color;
+      if (!out.has(k)) out.set(k, { design, color, sizes: [], total: 0 });
+      const g = out.get(k);
+      const hit = g.sizes.find(x => x.size === size);
+      if (hit) hit.qty += qty; else g.sizes.push({ size, qty });
+      g.total += qty;
+    }
+    for (const [, g] of out) {
+      g.sizes.sort((a, b) => String(a.size).localeCompare(String(b.size), undefined, { numeric: true }));
+    }
+    return [...out.values()].sort((a, b) => a.design.localeCompare(b.design, undefined, { numeric: true }) || a.color.localeCompare(b.color));
+  },
+
+  /* what is coming for one design/colour/size, soonest first */
+  arriving(design, color, size) {
+    if (!this.arrivals) return [];
+    return this.arrivals.get(design + '|' + color + '|' + size) || [];
+  },
+};
+
+/* ---------- state ---------- */
+const S = {
+  orderRows: null, stockRows: null,
+  meta: { orders: '', stock: '', track: '', purchase: '', when: '' },
+  track: null, purchRows: null, jobRows: null, delRows: null,
+  src: { orders: '', stock: '', purchase: '' },
+  lines: [], stockMap: null,
+  cats: {}, fullOnly: {}, names: {},
+  alloc: null, allocRows: [],
+  sortDesign: 'design',
+  asub: 'design',
+  openParty: new Set(),
+  openLot: new Set(),
+  q: { design: '', cust: '', allot: '', prod: '', prio: '' },
+  openPrio: new Set(), prioClass: 'all',
+  open: new Set(),      // expanded design rows
+  openCust: new Set(),  // expanded customer sub-rows
+};
+const CATS = ['W1', 'W2', 'R1', 'R2', 'R3'];
+
+/* columns actually used by the engine — everything else is dropped before saving */
+const O_COLS = ['Order Number', 'Order Date', 'Design Name', 'Customer Name', 'Customer Category', 'Color', 'Size', 'Pending Qty.', 'Expected Date', 'Tag', 'Order Note', 'Item Notes'];
+const S_COLS = ['Design Name', 'Color Name', 'Size', 'Current Stock', 'Sales Return', 'Delivered Stock'];
+const P_COLS = ['Challan No', 'Design Number', 'Design Name Without Prefix', 'Color', 'Size', 'Quantity', 'Purchase Date'];
+const slim = (rows, cols) => rows.map(r => { const o = {}; for (const c of cols) o[c] = r[c]; return o; });
+/* VastraApp has several note fields (Order Note, Order notes, Item Notes, Design
+   wise notes…) and the sheet may carry any of them, so keep all of them */
+const isNoteCol = k => /note/i.test(k);
+const slimOrders = rows => {
+  const head = rows.length ? Object.keys(rows[0]) : [];
+  const extra = head.filter(k => isNoteCol(k) && !O_COLS.includes(k));
+  const noteCols = head.filter(isNoteCol);
+  S.meta.orderCheck = {
+    cols: head.length,
+    notes: noteCols.map(c => ({ col: c, filled: rows.filter(r => String(r[c] == null ? '' : r[c]).trim()).length })),
+    rows: rows.length,
+  };
+  return slim(rows, O_COLS.concat(extra));
+};
+
+const store = {
+  get(k) { k = 'test.' + k; try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { k = 'test.' + k; try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+};
+
+/* ----------------------------------------------------------------
+   SHEET SOURCES — pull the two tables straight from Google Sheets.
+   Accepts either a normal sheet URL (converted to the gviz CSV
+   endpoint) or a File → Share → Publish to web CSV link. Read-only.
+------------------------------------------------------------------ */
+const STOCK_TAB = 'Stock Report - Detailed';
+const LOG_TAB = 'Paste Log';
+const TAB_OF = { orders: 'Input Design Pending Orders', stock: 'Stock Report - Detailed', jobs: 'Jobslips', purchase: 'Purchase Inward', delivery: 'Delivery Challans' };
+
+const Sheets = {
+  last: {},        // which -> signature of the data last applied
+  lastPull: 0,
+
+  /* the same spreadsheet as the orders link, a different tab, picked by name */
+  byName(u, name) {
+    const id = String(u || '').match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!id || id[1] === 'e') return '';
+    return 'https://docs.google.com/spreadsheets/d/' + id[1] + '/gviz/tq?tqx=out:csv&headers=1&sheet=' + encodeURIComponent(name);
+  },
+
+  /* what each source actually points at: a pasted link wins, otherwise stock
+     comes from the stock tab of the sheet the orders already come from */
+  source(which) {
+    if (which === 'orders' && S.src.orders && /\/spreadsheets\/d\/(?!e\/)/.test(S.src.orders) && !/[#&?]gid=\d+/.test(S.src.orders)) {
+      return this.byName(S.src.orders, TAB_OF.orders);
+    }
+    if (S.src[which]) return S.src[which];
+    if (which === 'stock' && S.src.orders) return this.byName(S.src.orders, STOCK_TAB);
+    if (which === 'jobs' && S.src.orders) return this.byName(S.src.orders, JOBS_TAB);
+    if (which === 'purchase' && S.src.orders) return this.byName(S.src.orders, TAB_OF.purchase);
+    if (which === 'delivery' && S.src.orders) return this.byName(S.src.orders, TAB_OF.delivery);
+    return '';
+  },
+
+  normalize(u) {
+    u = String(u || '').trim();
+    if (!u) return '';
+    if (u.includes('/gviz/')) return u;
+    if (u.includes('/pub')) return u.includes('output=csv') ? u : u + (u.includes('?') ? '&' : '?') + 'output=csv';
+    const id = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!id) return u;
+    const gid = (u.match(/[#&?]gid=(\d+)/) || [])[1] || '0';
+    return 'https://docs.google.com/spreadsheets/d/' + id[1] + '/gviz/tq?tqx=out:csv&headers=1&gid=' + gid;
+  },
+
+  /* Deliberately not SheetJS: its CSV reader guesses types and turns
+     size labels like 4-8 into dates. Everything here stays a string. */
+  parseCsv(text) {
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const rows = [];
+    let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (c !== '\r') cell += c;
+    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    if (!rows.length) return [];
+    const head = rows[0].map(h => h.trim());
+    return rows.slice(1)
+      .filter(r => r.some(v => v !== ''))
+      .map(r => { const o = {}; head.forEach((h, i) => { o[h] = (r[i] == null ? '' : r[i]).trim(); }); return o; });
+  },
+
+  /* Pasting into Sheets turns 4-8, 1-10, 6-10 into dates. Those rows either
+     arrive as a date or, through this endpoint, as a blank. Either way the
+     stock for that design would be silently short, so they are counted. */
+  badSizes(rows, qtyCol) { return this.badRows(rows, qtyCol).map(r => String(r['Size'] == null ? '' : r['Size']).trim() || '(blank)'); },
+  badRows(rows, qtyCol) {
+    const ok = /^(\d{1,2}(-\d{1,2})?|Default|Mix)$/i;
+    return rows.filter(r => {
+      const sz = String(r['Size'] == null ? '' : r['Size']).trim();
+      const q = Number(r[qtyCol] || 0);
+      return sz === '' ? q !== 0 : !ok.test(sz);
+    });
+  },
+
+  sig(rows) {
+    const s = JSON.stringify(rows);
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return rows.length + ':' + s.length + ':' + h;
+  },
+
+  async grab(url) {
+    const r = await fetch(this.normalize(url), { credentials: 'omit' });
+    if (!r.ok) throw new Error(r.status === 404 ? 'that tab was not found' : 'the sheet refused the request (' + r.status + ')');
+    const text = await r.text();
+    if (/^\s*</.test(text)) throw new Error('the sheet is not readable without signing in');
+    return this.parseCsv(text);
+  },
+
+  async pull(which, quiet) {
+    const url = this.source(which);
+    if (!url) return false;
+    try {
+      let rows = await this.grab(url);
+      if (!rows.length && which === 'jobs') return false;
+      if (!rows.length) throw new Error(which === 'stock' && !S.src.stock
+        ? 'the “' + STOCK_TAB + '” tab is empty or missing — check the tab name matches exactly'
+        : 'that tab has no rows');
+      const head = rows.length ? Object.keys(rows[0]) : [];
+      if (head.some(h => /^SUM of /i.test(h))) {
+        throw new Error('that is a pivot tab, not the raw data — point this at the Input Design Pending Orders tab instead');
+      }
+      if (which === 'orders') {
+        const bad = missingCols(rows, ['Design Name', 'Customer Name', 'Color', 'Size', 'Pending Qty.'], 'pending order');
+        if (bad) throw new Error(bad);
+        const broken = this.badRows(rows, 'Pending Qty.');
+        if (broken.length) {
+          const good = rows.filter(r => !broken.includes(r));
+          const eg = broken.slice(0, 4).map(r =>
+            esc(r['Order Number'] || '(no order no.)') + ' · ' + esc(r['Design Name'] || '?') + ' · ' + esc(r['Customer Name'] || '?') +
+            ' — Size shows “' + esc(String(r['Size'] || '').trim() || 'blank') + '”').join('<br>');
+          this.problems.push('<b>' + broken.length + ' order line' + (broken.length > 1 ? 's' : '') + ' skipped</b> — the Size cell does not hold a size, so ' +
+            (broken.length > 1 ? 'they were' : 'it was') + ' left out. Everything else is updated. Check ' +
+            (broken.length > 1 ? 'these rows' : 'this row') + ' in the sheet:<br>' + eg +
+            (broken.length > 4 ? '<br>…and ' + (broken.length - 4) + ' more.' : ''));
+          rows = good;
+          if (!rows.length) return false;
+        }
+        const slimmed = slimOrders(rows);
+        const sg = this.sig(slimmed);
+        if (sg === this.last.orders) return 'same';
+        this.last.orders = sg;
+        S.orderRows = slimmed;
+        S.meta.orders = 'from sheet';
+      } else if (which === 'stock') {
+        const bad = missingCols(rows, ['Design Name', 'Color Name', 'Size', 'Current Stock'], 'stock');
+        if (bad) {
+          // an unknown tab name makes Google return the first tab — the orders — instead
+          if (!S.src.stock && rows.length && 'Customer Name' in rows[0]) {
+            throw new Error('there is no tab called “' + STOCK_TAB + '” in the sheet yet (Google sent back the orders tab instead). Create it with exactly that name and paste the VastraApp stock export into it, headers in row 1');
+          }
+          throw new Error(bad);
+        }
+        const mangled = this.badSizes(rows, 'Current Stock');
+        if (mangled.length) {
+          const eg = [...new Set(mangled)].slice(0, 3).join(', ');
+          this.problems.push('<b>Stock not updated — ' + mangled.length + ' row' + (mangled.length > 1 ? 's' : '') +
+            ' in “' + STOCK_TAB + '” have sizes Google Sheets turned into dates</b> (' + esc(eg) + '). ' +
+            (S.stockRows ? 'Still using the last good stock. ' : '') +
+            'To fix: in the sheet, select the Size column → Format → Number → Plain text, then paste the VastraApp data again.');
+          return false;
+        }
+        const slimmed = slim(rows, S_COLS);
+        const sg = this.sig(slimmed);
+        if (sg === this.last.stock) return 'same';
+        this.last.stock = sg;
+        S.stockRows = slimmed;
+        S.meta.stock = 'from “' + (S.src.stock ? 'sheet' : STOCK_TAB) + '”';
+      } else if (which === 'jobs') {
+        const bad = missingCols(rows, ['Jobslip No', 'Design Name', 'Piece Name', 'Jobslip Status'], 'jobslip');
+        if (bad) {
+          if (rows.length && 'Customer Name' in rows[0]) {
+            throw new Error('there is no tab called “' + JOBS_TAB + '” in the sheet yet. Create it with exactly that name and paste the VastraApp jobcard export into it, headers in row 1');
+          }
+          throw new Error(bad);
+        }
+        const slimmed = slim(rows, J_COLS);
+        const sg = this.sig(slimmed);
+        if (sg === this.last.jobs) return 'same';
+        this.last.jobs = sg;
+        S.jobRows = slimmed;
+        S.meta.jobs = 'from “' + JOBS_TAB + '”';
+      } else if (which === 'delivery') {
+        // no such tab yet: Google sends the orders tab instead — the file upload still works, so stay quiet
+        if (rows.length && 'Pending Qty.' in rows[0]) return false;
+        const bad = missingCols(rows, ['Date', 'Customer Name', 'Design Number', 'Color', 'Size', 'Quantity'], 'delivery challan');
+        if (bad) throw new Error(bad);
+        const broken = this.badRows(rows, 'Quantity');
+        if (broken.length) {
+          this.problems.push('<b>' + broken.length + ' delivery line' + (broken.length > 1 ? 's' : '') + ' skipped</b> — the Size cell does not hold a size. ' +
+            'Format the Size column of “' + DEL_TAB + '” as Plain text and paste again.');
+          rows = rows.filter(r => !broken.includes(r));
+        }
+        const slimmed = slim(rows, D_COLS);
+        const sg = this.sig(slimmed);
+        if (sg === this.last.delivery) return 'same';
+        this.last.delivery = sg;
+        S.delRows = slimmed;
+        S.meta.delivery = 'from “' + DEL_TAB + '”';
+      } else {
+        if (!S.src.purchase && rows.length && 'Pending Qty.' in rows[0]) return false;
+        const bad = missingCols(rows, ['Challan No', 'Color', 'Size', 'Quantity'], 'purchase');
+        if (bad) throw new Error(bad);
+        const pslim = slim(rows, P_COLS);
+        const psg = this.sig(pslim);
+        if (psg === this.last.purchase) return 'same';
+        this.last.purchase = psg;
+        S.purchRows = pslim;
+        S.meta.purchase = 'from sheet';
+      }
+      S.meta.seen = S.meta.seen || {};
+      S.meta.seen[which] = Date.now();
+      if (S.meta.fromFile) delete S.meta.fromFile[which];
+      return true;
+    } catch (e) {
+      const cors = /Failed to fetch|NetworkError|Load failed/i.test(e.message || '');
+      if (quiet && cors) { this.netOnly = true; return false; }
+      this.problems.push('<b>Could not read the ' + which + ' tab.</b> ' + (cors
+        ? 'Google blocked the request from this page. Fix it in the sheet: File → Share → Publish to web → pick that tab → CSV → Publish, then paste the published link here instead of the normal one.'
+        : esc(e.message)));
+      return false;
+    }
+  },
+
+  async pullAll(quiet) {
+    if (this.busy) return;
+    if (!this.source('orders') && !this.source('stock') && !this.source('purchase') && !this.source('jobs')) return;
+    this.busy = true;
+    this.lastPull = Date.now();
+    this.problems = [];
+    this.netOnly = false;
+    const btn = $('#refresh'); if (btn) btn.textContent = 'Pulling…';
+    const r = [];
+    try {
+      r.push(await this.pull('orders', quiet));
+      r.push(await this.pull('stock', quiet));
+      r.push(await this.pull('purchase', quiet));
+      r.push(await this.pull('jobs', quiet));
+      r.push(await this.pull('delivery', quiet));
+    } finally {
+      if (btn) btn.textContent = 'Refresh from sheet';
+      this.busy = false;
+    }
+    await this.readLog();
+    const changed = r.some(x => x === true);
+    paintIntake();
+    if (changed) {
+      S.meta.when = new Date().toLocaleString();
+      save(); rebuild();
+    }
+    // a quiet background check that only hit a network blip leaves the last word standing
+    if (!(quiet && this.netOnly && !this.problems.length)) {
+      const box = $('#sheetmsg');
+      if (this.problems.length) box.innerHTML = this.problems.map(p => '<div class="note bad">' + p + '</div>').join('');
+      else if (!quiet && !changed && r.some(x => x === 'same')) box.innerHTML = '<div class="note">Sheet checked — nothing has changed since the last pull.</div>';
+      else box.innerHTML = '';
+    }
+  },
+
+  /* The sheet's own record of when each tab was last pasted into, written by a
+     small script in the sheet. Missing tab or no script: the app falls back to
+     the time it first saw the new data. */
+  /* what was loaded last time, so an unchanged sheet is recognised after a reopen */
+  seed() {
+    if (S.orderRows) this.last.orders = this.sig(S.orderRows);
+    if (S.stockRows) this.last.stock = this.sig(S.stockRows);
+    if (S.purchRows) this.last.purchase = this.sig(S.purchRows);
+    if (S.jobRows) this.last.jobs = this.sig(S.jobRows);
+    if (S.delRows) this.last.delivery = this.sig(S.delRows);
+  },
+
+  async readLog() {
+    const url = S.src.orders ? this.byName(S.src.orders, LOG_TAB) : '';
+    if (!url) return;
+    try {
+      let rows = await this.grab(url);
+      // an unknown tab name makes Google return the first tab instead
+      if (!rows.length || !('Tab' in rows[0]) || !('Last pasted' in rows[0])) { S.pasted = null; return; }
+      const out = {};
+      for (const r of rows) {
+        const t = String(r['Tab'] || '').trim();
+        const at = pasteTime(r['Last pasted']);
+        if (t && at) out[t] = { at, rows: Number(r['Rows'] || 0) || null };
+      }
+      S.pasted = out;
+    } catch (e) { /* the log is a nicety; never let it break a pull */ }
+  },
+
+  /* Paste in the sheet, come back to the app: it checks again by itself.
+     Also checks every two minutes while the app is open on screen. */
+  watch() {
+    const due = () => document.visibilityState === 'visible' && Date.now() - this.lastPull > 30000;
+    document.addEventListener('visibilitychange', () => { if (due()) this.pullAll(true); });
+    window.addEventListener('focus', () => { if (due()) this.pullAll(true); });
+    setInterval(() => { if (document.visibilityState === 'visible' && Date.now() - this.lastPull > 115000) this.pullAll(true); }, 30000);
+  },
+};
+
+
+/* ----------------------------------------------------------------
+   LIVE BOARD — read-only Firestore link to Set Tracker.
+   Same project the tracker writes to. This app never writes: it
+   only attaches snapshot listeners, so nothing here can corrupt
+   production data. The JSON upload stays as an offline fallback.
+------------------------------------------------------------------ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCbixluS7YL-X-7LXW0ReIw6F0VQ6R4_-w",
+  authDomain: "production-dashboard-f2313.firebaseapp.com",
+  projectId: "production-dashboard-f2313",
+  storageBucket: "production-dashboard-f2313.firebasestorage.app",
+  messagingSenderId: "30608523876",
+  appId: "1:30608523876:web:96306448836eaf0a35d571",
+};
+
+const Live = {
+  sets: null, categories: null, variableStages: null, on: false,
+
+  chip(state, text) {
+    const c = $('#chip');
+    c.className = 'chip' + (state ? ' ' + state : '');
+    c.textContent = text;
+  },
+
+  start() {
+    if (typeof firebase === 'undefined' || !firebase.firestore) {
+      return this.chip('', 'offline board');
+    }
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      const db = firebase.firestore();
+      this.chip('wait', 'connecting');
+
+      db.collection('sets').onSnapshot(
+        snap => {
+          this.sets = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+          this.on = true;
+          this.apply();
+          // if the categories doc never turns up, carry on with what the sets imply
+          clearTimeout(this._t);
+          this._t = setTimeout(() => { if (!this.categories) this.apply(true); }, 5000);
+        },
+        err => this.fail(err)
+      );
+
+      db.collection('meta').onSnapshot(
+        snap => {
+          for (const d of snap.docs) {
+            const v = d.data();
+            if (v && Array.isArray(v.categories)) this.categories = v.categories;
+            if (v && Array.isArray(v.variableStages)) this.variableStages = v.variableStages;
+          }
+          this.apply();
+        },
+        err => this.fail(err)
+      );
+    } catch (e) { this.fail(e); }
+  },
+
+  fail(err) {
+    console.warn('Set Tracker link:', err && err.message);
+    this.chip('err', 'board offline');
+  },
+
+  apply(giveUp) {
+    if (!this.sets) return;
+    // categories can arrive after sets, or come from an export loaded earlier
+    const cats = this.categories || (S.track && S.track.categories) || [];
+    if (!cats.length) {
+      // Guessing the stage list would risk calling an unstarted lot finished
+      // and releasing stock that does not exist, so stop and say so instead.
+      if (!giveUp) return this.chip('wait', 'connecting');
+      this.chip('err', 'need stage list');
+      msg('<b>Connected to the board — ' + this.sets.length + ' lots — but the production stage list is not readable.</b> ' +
+        'Open Set Tracker once, tap Export JSON, and load that file into the Set Tracker slot above. ' +
+        'It only has to be done once; after that the live feed works on its own.', 'bad');
+      return;
+    }
+    SetTracker.load({ sets: this.sets, categories: cats, variableStages: this.variableStages || (S.track && S.track.variableStages) || [] });
+    S.liveCount = this.sets.length;
+    this.chip('live', 'board live · ' + SetTracker.index.size);
+    if (S.lines.length) { renderDesign(); renderCustomer(); }
+    paintIntake();
+  },
+};
+
+/* ----------------------------------------------------------------
+   SET TRACKER — reads the board's Export JSON.
+   A set is ready when every part its category requires is either
+   ticked off or has a date. The ready date is the latest of those
+   dates, because the set can't go out until the slowest part lands.
+   Where several lots share a pattern, the earliest one wins.
+------------------------------------------------------------------ */
+const SetTracker = {
+  raw: null, index: null,
+
+  /* A piece with an unfinished post-process (washing, printing) does not land on
+     its entered date — the board pushes it out by that process's days. */
+  varDays(set, partKey) {
+    const ids = ((set.partVars || {})[partKey]) || [];
+    if (!ids.length) return 0;
+    const doneIds = ((set.partVarsDone || {})[partKey]) || [];
+    return (this.stages || []).filter(v => ids.includes(v.id) && !doneIds.includes(v.id))
+      .reduce((t, v) => t + (parseInt(v.days, 10) || 0), 0);
+  },
+
+  effDate(set, partKey) {
+    const raw = (set.dates || {})[partKey];
+    if (!raw) return null;
+    const add = this.varDays(set, partKey);
+    if (!add) return raw;
+    const d = new Date(raw + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + add);
+    return d.toISOString().slice(0, 10);
+  },
+
+  load(json) {
+    this.raw = json;
+    // Set Tracker writes these to meta/config, so the live feed carries them.
+    // The export file leaves them out, so fall back to the board's own defaults.
+    this.stages = (json.variableStages && json.variableStages.length)
+      ? json.variableStages
+      : [{ id: 'vs_wash', name: 'Washing', days: 7 },
+         { id: 'vs_print', name: 'Screen printing', days: 6 },
+         { id: 'vs_button', name: 'Buttoning', days: 2 }];
+    const parts = {};
+    for (const c of (json.categories || [])) {
+      parts[c.id] = (c.parts || []).map(p => ({ key: p.key, label: p.label, optional: !!p.optional }));
+    }
+    const idx = new Map();
+    for (const s of (json.sets || [])) {
+      const label = String(s.pattern || '').trim();
+      const m = label.match(/^\s*(\d+)/);
+      if (!m) continue;
+      const base = m.group ? m.group(1) : m[1];
+      const sz = label.match(/\((\d+)\s*-\s*(\d+)\)/);
+      const req = parts[s.catId] || [];
+      const done = new Set(s.done || []);
+      const dates = s.dates || {};
+      const open = req.filter(p => !done.has(p.key));
+      const missing = open.filter(p => !dates[p.key] && !p.optional).map(p => p.label);
+      const known = open.map(p => this.effDate(s, p.key)).filter(Boolean);
+      const lot = {
+        label, base,
+        lo: sz ? +sz[1] : null, hi: sz ? +sz[2] : null,
+        ready: open.length === 0 ? 'done' : (known.length ? known.sort().slice(-1)[0] : null),
+        missing, priority: !!s.priority,
+        openCount: open.length, totalParts: req.length,
+      };
+      if (!idx.has(base)) idx.set(base, []);
+      idx.get(base).push(lot);
+    }
+    this.index = idx;
+    return idx.size;
+  },
+
+  /* returns {state, date, label} — state is done | dated | undated | absent */
+  lookup(design, sizeLabel) {
+    if (!this.index) return { state: 'absent' };
+    const lots = this.index.get(String(design));
+    if (!lots || !lots.length) return { state: 'absent' };
+
+    let pool = lots;
+    const r = String(sizeLabel || '').match(/^(\d+)\s*-\s*(\d+)$/);
+    if (r) {
+      const lo = +r[1], hi = +r[2];
+      const exact = lots.filter(l => l.lo === lo && l.hi === hi);
+      const covers = lots.filter(l => l.lo !== null && l.lo <= lo && l.hi >= hi);
+      const untagged = lots.filter(l => l.lo === null);
+      pool = exact.length ? exact : (covers.length ? covers : (untagged.length ? untagged : lots));
+    }
+    if (pool.some(l => l.ready === 'done')) {
+      return { state: 'done', label: pool.find(l => l.ready === 'done').label };
+    }
+    const dated = pool.filter(l => l.ready).sort((a, b) => a.ready.localeCompare(b.ready));
+    if (dated.length) return { state: 'dated', date: dated[0].ready, label: dated[0].label };
+    return { state: 'undated', label: pool[0].label, missing: pool[0].missing };
+  },
+};
+
+const D_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function shortDate(iso) {
+  const p = String(iso).split('-');
+  if (p.length !== 3) return iso;
+  return +p[2] + ' ' + D_MON[+p[1] - 1];
+}
+
+/* The one number every order needs: when can this actually go out. */
+function dispatchCell(design, color, sizeLabel, ordered, allotted) {
+  if (allotted >= ordered && ordered > 0) return '<span class="ready">ready now</span>';
+  const arr = arrivalCell(design, color, sizeLabel);
+  if (allotted > 0) return '<span class="part">part ready</span> · ' + arr;
+  return arr;
+}
+
+function arrivalCell(design, color, sizeLabel) {
+  const sizes = expandSize(sizeLabel);
+  if (!sizes || !Lots.arrivals) return readyCell(design, sizeLabel);
+  // an order spans a range; the line can only ship when its slowest size lands
+  const perSize = sizes.map(s => Lots.arriving(design, color, s));
+  if (perSize.some(l => !l.length)) return readyCell(design, sizeLabel);
+  let due = null, lots = new Set();
+  for (const list of perSize) {
+    const first = list[0];
+    lots.add(first.lot);
+    if (!due || (first.due || '9999') > due) due = first.due || '9999';
+  }
+  if (!due || due === '9999') {
+    return '<span class="pend" title="' + esc([...lots].join(', ')) + '">lot cut, no date</span>';
+  }
+  const late = due < new Date().toISOString().slice(0, 10);
+  return '<span class="' + (late ? 'bal' : 'ready') + '" title="from ' + esc([...lots].join(', ')) + '">' +
+    shortDate(due) + '</span>';
+}
+
+function readyCell(design, sizeLabel) {
+  const r = SetTracker.lookup(design, sizeLabel);
+  if (r.state === 'absent') return '<span class="pend">not on board</span>';
+  if (r.state === 'done') return '<span class="ready" title="' + esc(r.label) + '">complete</span>';
+  if (r.state === 'undated') {
+    const t = r.missing && r.missing.length ? 'Waiting on: ' + r.missing.join(', ') : 'No dates set';
+    return '<span class="pend" title="' + esc(r.label + ' — ' + t) + '">no date yet</span>';
+  }
+  const late = r.date < new Date().toISOString().slice(0, 10);
+  return '<span class="' + (late ? 'bal' : 'ready') + '" title="' + esc(r.label) + '">' + shortDate(r.date) + '</span>';
+}
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const title = s => String(s).replace(/\b\w/g, c => c.toUpperCase());
+const msg = (html, kind) => { $('#msg').innerHTML = html ? '<div class="note' + (kind === 'bad' ? ' bad' : '') + '">' + html + '</div>' : ''; };
+
+async function readSheet(file, wanted) {
+  try { await xlsxReady; } catch (e) { throw new Error('needs the Excel reader, which could not load — check the connection and try again'); }
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onerror = () => rej(new Error('could not be read'));
+    r.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        let name = wb.SheetNames.find(n => n.toLowerCase() === wanted.toLowerCase())
+          || wb.SheetNames.find(n => n.toLowerCase().includes(wanted.toLowerCase().split(' ')[0]))
+          || wb.SheetNames[0];
+        res({ rows: XLSX.utils.sheet_to_json(wb.Sheets[name], { defval: '', raw: false }), sheet: name });
+      } catch (err) { rej(err); }
+    };
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function missingCols(rows, cols, what) {
+  if (!rows.length) return 'The ' + what + ' sheet has no rows.';
+  const have = Object.keys(rows[0]);
+  const miss = cols.filter(c => !have.includes(c));
+  return miss.length ? 'The ' + what + ' file is missing these columns: ' + miss.join(', ') : '';
+}
+
+/* ---------- intake ---------- */
+$('#fOrders').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const { rows } = await readSheet(f, 'Input Design Pending Orders');
+    const bad = missingCols(rows, ['Design Name', 'Customer Name', 'Color', 'Size', 'Pending Qty.'], 'pending order');
+    if (bad) return msg(bad, 'bad');
+    S.orderRows = slimOrders(rows);
+    S.meta.orders = f.name;
+    S.meta.seen = S.meta.seen || {}; S.meta.seen.orders = Date.now(); S.meta.fromFile = Object.assign(S.meta.fromFile || {}, { orders: true });
+    S.meta.when = new Date().toLocaleString();
+    S.open.clear(); S.openCust.clear();
+    save(); rebuild();
+  } catch (err) { msg('That file ' + esc(err.message || 'could not be opened') + '.', 'bad'); }
+});
+
+$('#fStock').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const { rows } = await readSheet(f, 'Design Stock');
+    const bad = missingCols(rows, ['Design Name', 'Color Name', 'Size', 'Current Stock'], 'stock');
+    if (bad) return msg(bad, 'bad');
+    S.stockRows = slim(rows, S_COLS);
+    S.meta.stock = f.name;
+    S.meta.seen = S.meta.seen || {}; S.meta.seen.stock = Date.now(); S.meta.fromFile = Object.assign(S.meta.fromFile || {}, { stock: true });
+    S.meta.when = new Date().toLocaleString();
+    save(); rebuild();
+  } catch (err) { msg('That file ' + esc(err.message || 'could not be opened') + '.', 'bad'); }
+});
+
+$('#fPurch').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const { rows } = await readSheet(f, 'Purchase Inward');
+    const bad = missingCols(rows, ['Challan No', 'Color', 'Size', 'Quantity'], 'purchase');
+    if (bad) return msg(bad, 'bad');
+    S.purchRows = slim(rows, P_COLS);
+    S.meta.purchase = f.name;
+    S.meta.seen = S.meta.seen || {}; S.meta.seen.purchase = Date.now(); S.meta.fromFile = Object.assign(S.meta.fromFile || {}, { purchase: true });
+    S.meta.when = new Date().toLocaleString();
+    save(); rebuild();
+  } catch (err) { msg('That file ' + esc(err.message || 'could not be opened') + '.', 'bad'); }
+});
+
+$('#fDel').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const { rows } = await readSheet(f, 'Delivery Challans');
+    const bad = missingCols(rows, ['Date', 'Customer Name', 'Design Number', 'Color', 'Size', 'Quantity'], 'delivery challan');
+    if (bad) return msg(bad, 'bad');
+    S.delRows = slim(rows, D_COLS);
+    S.meta.delivery = f.name;
+    S.meta.seen = S.meta.seen || {}; S.meta.seen.delivery = Date.now(); S.meta.fromFile = Object.assign(S.meta.fromFile || {}, { delivery: true });
+    S.meta.when = new Date().toLocaleString();
+    save(); rebuild();
+  } catch (err) { msg('That file ' + esc(err.message || 'could not be opened') + '.', 'bad'); }
+  e.target.value = '';
+});
+
+$('#fTrack').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const j = JSON.parse(ev.target.result);
+      if (!j.sets) throw new Error('no sets in that file');
+      SetTracker.load(j);
+      Live.on = false;
+      S.track = j; S.meta.track = f.name;
+      save(); rebuild();
+    } catch (err) { msg('That is not a Set Tracker export.', 'bad'); }
+  };
+  r.readAsText(f);
+});
+
+/* ---------- persistence ---------- */
+function save() {
+  const ok = store.set('allot.data', { orders: S.orderRows, stock: S.stockRows, purchase: S.purchRows, jobs: S.jobRows, delivery: S.delRows, track: S.track, meta: S.meta });
+  if (!ok) msg('The files are loaded but too large to keep after a refresh. Everything still works this session.', 'bad');
+  saveParties();
+}
+function saveParties() {
+  const o = {};
+  for (const k of Object.keys(S.names)) o[k] = { cat: S.cats[k] || '', full: !!S.fullOnly[k], name: S.names[k] };
+  store.set('allot.parties', o);
+  store.set('allot.src', S.src);
+}
+function restore() {
+  const src = store.get('allot.src'); if (src) S.src = src;
+  const p = store.get('allot.parties');
+  if (p) for (const k of Object.keys(p)) { S.cats[k] = p[k].cat; S.fullOnly[k] = !!p[k].full; S.names[k] = p[k].name || k; }
+  const d = store.get('allot.data');
+  if (d) {
+    if (d.orders) { S.orderRows = d.orders; S.stockRows = d.stock; }
+    if (d.purchase) { S.purchRows = d.purchase; }
+    if (d.jobs) { S.jobRows = d.jobs; }
+    if (d.delivery) { S.delRows = d.delivery; }
+    if (d.track) { S.track = d.track; SetTracker.load(d.track); }
+    S.meta = d.meta || S.meta;
+  }
+  rebuild();
+}
+
+/* ---------- pipeline ---------- */
+function totalPieces(m) { let n = 0; for (const [, b] of m) for (const s of Object.keys(b)) n += b[s]; return n; }
+
+function rebuild() {
+  paintIntake();
+  if (!S.orderRows) { paintEmpty(); return; }
+
+  const d = buildDemandCore(S.orderRows, {});
+  S.lines = d.lines;
+  for (const ln of S.lines) {
+    S.names[ln.ckey] = ln.customer;
+    if (S.cats[ln.ckey] === undefined || S.cats[ln.ckey] === null) {
+      const raw = (S.orderRows.find(r => custKey(r['Customer Name']) === ln.ckey) || {})['Customer Category'] || '';
+      S.cats[ln.ckey] = /wholesal/i.test(raw) ? 'W1' : '';
+    }
+  }
+
+  const netted = S.stockRows ? netStock(S.stockRows, { stockColumn: 'Current Stock' }).stock : new Map();
+  const board = Live.on ? { sets: Live.sets, categories: Live.categories || [] } : S.track;
+  Lots.build(S.purchRows, board, {}, Number($('#ageDays').value || 30));
+  const split = Lots.freeStock(netted);
+  S.stockMap = split.free;
+  S.netted = netted;
+  S.nettedTotal = totalPieces(netted);
+  S.heldWip = split.held;
+
+  const cats = {};
+  for (const k of Object.keys(S.cats)) if (S.cats[k]) cats[k] = S.cats[k];
+  const defCat = $('#defCat').value;
+  const r = $('#mode').value === 'sets'
+    ? allocateSets(S.lines, S.stockMap, { categories: cats, defaultCategory: defCat })
+    : allocate(S.lines, S.stockMap, { categories: cats, defaultCategory: defCat });
+  enforceFullOnly(S.lines, r.alloc, S.fullOnly);
+  S.alloc = r.alloc;
+  S.allocRows = allocationRows(S.lines, r.alloc, cats, defCat);
+  S.catOf = cats; S.defCat = defCat;
+
+  renderDesign(); renderCustomer(); renderProduction(); renderAllot(); renderPrio(); renderParties();
+  $('#exportBtn').disabled = false;
+  checkColours();
+}
+
+/* "2026-10-16 16:12" from the script; tolerate what Sheets may display instead */
+function pasteTime(v) {
+  const s = String(v == null ? '' : v).trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime();
+  m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})[ ,]+(\d{1,2}):(\d{2})/);
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime();
+  return null;
+}
+
+function whenText(ms) {
+  const d = new Date(ms), now = new Date();
+  const day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day(now) - day(d)) / 86400000);
+  const rel = diff <= 0 ? 'today' : diff === 1 ? 'yesterday' : diff + ' days ago';
+  const t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return { text: d.getDate() + ' ' + D_MON[d.getMonth()] + ', ' + t + ' (' + rel + ')', days: diff };
+}
+
+/* one line per source: when it was pasted into the sheet, or when the app first saw it */
+function stampLine() {
+  const have = { orders: S.orderRows, stock: S.stockRows, purchase: S.purchRows, jobs: S.jobRows, delivery: S.delRows };
+  const name = { orders: 'Orders', stock: 'Stock', purchase: 'Purchase', jobs: 'Jobslips', delivery: 'Deliveries' };
+  const parts = [];
+  for (const k of ['orders', 'stock', 'delivery', 'purchase', 'jobs']) {
+    if (!have[k]) continue;
+    const log = S.pasted && S.pasted[TAB_OF[k]];
+    const fromFile = S.meta.fromFile && S.meta.fromFile[k];
+    let label, ms;
+    if (log && !fromFile) { label = 'pasted'; ms = log.at; }
+    else if (S.meta.seen && S.meta.seen[k]) { label = fromFile ? 'file loaded' : 'picked up'; ms = S.meta.seen[k]; }
+    if (!ms) { parts.push('<span><b>' + name[k] + '</b> loaded earlier — time shows from the next paste</span>'); continue; }
+    const w = whenText(ms);
+    parts.push('<span class="' + (w.days >= 3 ? 'st-old' : '') + '"><b>' + name[k] + '</b> ' + label + ' ' + esc(w.text) + '</span>');
+  }
+  if (!parts.length) return '';
+  const hint = S.src.orders && !S.pasted
+    ? '<span class="st-h">“picked up” is when this app first saw the data. Add the paste-log script to the sheet to show the actual paste time.</span>'
+    : '';
+  return parts.join('') + hint;
+}
+
+function paintIntake() {
+  $('#hOrders').textContent = S.orderRows ? S.orderRows.length + ' order rows · ' + (S.meta.orders || 'loaded') : 'Design Wise Order Report — tap to choose';
+  $('#dropOrders').classList.toggle('on', !!S.orderRows);
+  $('#hStock').textContent = S.stockRows ? S.stockRows.length + ' stock rows · ' + (S.meta.stock || 'loaded') : 'Design Wise Stock Overall Detail — tap to choose';
+  $('#dropStock').classList.toggle('on', !!S.stockRows);
+  $('#hPurch').textContent = S.purchRows
+    ? S.purchRows.length + ' purchase rows · ' + (S.meta.purchase || 'loaded')
+    : 'Purchase export — tells the app what is cut but unfinished';
+  $('#dropPurch').classList.toggle('on', !!S.purchRows);
+  $('#hDel').textContent = S.delRows
+    ? S.delRows.length + ' delivery lines · ' + (S.meta.delivery || 'loaded')
+    : 'Delivery challan export — sales history for Priority';
+  $('#dropDel').classList.toggle('on', !!S.delRows);
+  const n = SetTracker.index ? SetTracker.index.size : 0;
+  $('#hTrack').textContent = n
+    ? n + ' patterns · ' + (Live.on ? 'live from the board' : (S.meta.track || 'from file'))
+    : 'Reads the live board — or tap for an Export JSON';
+  $('#dropTrack').classList.toggle('on', !!n);
+  $('#stamp').innerHTML = stampLine();
+}
+
+function paintEmpty() {
+  $('#cust-body').innerHTML = '<div class="empty">Load the pending order file to see this report.</div>';
+  $('#design-body').innerHTML = '<div class="empty">Load the pending order file to see this report.</div>';
+  renderProduction();
+}
+
+function checkColours() {
+  if (!S.stockRows) return msg('Stock file not loaded — the reports are showing, but allotted quantities will all read zero.');
+  const sc = new Set([...S.stockMap.keys()].map(k => k.split('|')[1]));
+  const missing = new Map();
+  for (const ln of S.lines) {
+    if (!S.stockMap.has(ln.design + '|' + ln.color) && !sc.has(ln.color)) missing.set(ln.color, (missing.get(ln.color) || 0) + ln.qty);
+  }
+  if (!missing.size) return msg('');
+  const list = [...missing.entries()].sort((a, b) => b[1] - a[1]).map(([c, q]) => esc(title(c)) + ' (' + q + ')').join(', ');
+  msg('<b>' + missing.size + ' colour' + (missing.size > 1 ? 's' : '') + ' in the orders have no stock rows:</b> ' + list + '. Those lines show as fully short until the spelling matches VastraApp.');
+}
+
+/* ---------- design wise, with drill-down ---------- */
+/* one query, matched against design number, colour, or any party on the row */
+function hits(q, design, color, customers) {
+  if (!q) return true;
+  const hay = ('des-' + design + ' ' + design + ' ' + color + ' ' + (customers || '')).toLowerCase();
+  return q.split(/\s+/).filter(Boolean).every(term => hay.includes(term));
+}
+
+function noteCount() {
+  const n = S.lines.filter(l => l.notes && l.notes.length).length;
+  return n ? 'notes on ' + n + ' order line' + (n === 1 ? '' : 's') : '<b class="bal">no order notes came through</b>';
+}
+
+function cmpDesign(a, b) {
+  return a.design.localeCompare(b.design, undefined, { numeric: true })
+    || a.color.localeCompare(b.color)
+    || String(a.size).localeCompare(String(b.size), undefined, { numeric: true });
+}
+
+function designWiseRows() {
+  const map = new Map();
+  for (const ln of S.lines) {
+    const key = ln.design + '|' + ln.color + '|' + ln.sizeLabel;
+    if (!map.has(key)) map.set(key, { key, design: ln.design, color: ln.color, size: ln.sizeLabel, qty: 0, allotted: 0, lines: [] });
+    const g = map.get(key);
+    g.qty += ln.qty;
+    g.lines.push(ln);
+  }
+  for (const r of S.allocRows) {
+    const g = map.get(r.design + '|' + r.color + '|' + r.size);
+    if (g) g.allotted += r.allocated;
+  }
+  const out = [...map.values()];
+  if (S.sortDesign === 'qty') return out.sort((a, b) => b.qty - a.qty || cmpDesign(a, b));
+  if (S.sortDesign === 'short') return out.sort((a, b) => (b.qty - b.allotted) - (a.qty - a.allotted) || cmpDesign(a, b));
+  return out.sort(cmpDesign);
+}
+
+/* short rows with nothing on the production board — the real blind spot */
+function toAddBanner() {
+  if (!Lots.toAdd || !Lots.toAdd.length) return '';
+  const list = Lots.toAdd.map(t => '<b>' + esc(t.id) + '</b> ' + t.pieces + ' pcs, cut ' +
+    shortDate(new Date(t.cut).toISOString().slice(0, 10))).join(' · ');
+  return '<div class="note bad"><b>' + Lots.toAdd.length + ' lot' + (Lots.toAdd.length > 1 ? 's' : '') +
+    ' cut in the last ' + Lots.ageDays + ' days are not on the production board.</b> ' +
+    'They are held back from allotment and have no date until you add them to Set Tracker. ' + list + '</div>';
+}
+
+function wipBanner() {
+  if (!S.purchRows) {
+    return '<div class="note">No purchase file loaded. Stock is being treated as fully available, which overstates it — purchase entries are made at cutting, so uncut and unstitched goods sit inside Current Stock.</div>';
+  }
+  if (!Lots.openLots.length) return '';
+  const top = Lots.openLots.slice(0, 4)
+    .map(l => esc(l.label) + ' ' + l.pieces + (l.due ? ' due ' + shortDate(l.due) : '')).join(' · ');
+  return '<div class="note"><b>' + S.heldWip + ' pieces held back as work in progress</b> across ' +
+    Lots.openLots.length + ' lot' + (Lots.openLots.length > 1 ? 's' : '') +
+    ' still open on the board. They are counted in Current Stock but are not sets yet, so they are not allotted. ' +
+    top + (Lots.openLots.length > 4 ? ' …' : '') + '</div>';
+}
+
+function boardGap(rows) {
+  if (!SetTracker.index) return '';
+  const gaps = rows.filter(r => r.qty > r.allotted && SetTracker.lookup(r.design, r.size).state === 'absent');
+  if (!gaps.length) return '';
+  const pcs = gaps.reduce((t, r) => t + (r.qty - r.allotted), 0);
+  return '<div class="note"><b>' + gaps.length + ' short rows have no lot on the board</b> — ' + pcs +
+    ' pieces are owed with nothing in production against them.</div>';
+}
+
+function renderDesign() {
+  const all = designWiseRows();
+  const q = S.q.design.trim().toLowerCase();
+  const rows = q ? all.filter(r => hits(q, r.design, r.color, r.lines.map(l => l.customer).join(' '))) : all;
+  let h = '<h2 class="sec">Design wise pending orders</h2>' +
+    '<p class="exp">' + rows.length + ' rows · ' + rows.reduce((t, r) => t + r.qty, 0) + ' pieces pending · ' +
+    rows.reduce((t, r) => t + r.allotted, 0) + ' allotted · ' + noteCount() + '. Tap any row for the parties behind it.</p>' +
+    (q ? '<p class="hit">Showing ' + rows.length + ' of ' + all.length + ' rows matching “' + esc(S.q.design.trim()) + '”</p>' : '') +
+    '<div class="seg"><span class="seg-l">Sort</span>' +
+    [['design', 'design no.'], ['qty', 'most ordered'], ['short', 'most short']]
+      .map(o => '<button type="button" class="seg-b' + (S.sortDesign === o[0] ? ' on' : '') +
+        '" data-sort="' + o[0] + '">' + o[1] + '</button>').join('') +
+    '</div>' + toAddBanner() + wipBanner() + boardGap(all);
+  h += '<div class="tw"><table><thead><tr><th></th><th>Design</th><th>Colour</th><th>Size</th><th class="n">Pend</th><th class="n">Allot</th><th class="n">Short</th></tr></thead><tbody>';
+  for (const r of rows) {
+    const open = S.open.has(r.key);
+    const short = r.qty - r.allotted;
+    h += '<tr class="clik" data-k="' + esc(r.key) + '"><td class="tw-x">' + (open ? '&minus;' : '+') + '</td>' +
+      '<td>DES-' + esc(r.design) + '</td><td class="wrap">' + esc(title(r.color)) + '</td><td>' + esc(r.size) + '</td>' +
+      '<td class="n">' + r.qty + '</td>' +
+      '<td class="n ' + (r.allotted ? 'full' : 'none') + '">' + (r.allotted || '—') + '</td>' +
+      '<td class="n ' + (short ? 'bal' : 'none') + '">' + (short || '—') + '</td></tr>';
+    if (open) h += drillRows(r);
+  }
+  $('#design-body').innerHTML = rows.length
+    ? h + '</tbody></table></div>'
+    : h.split('<div class="tw">')[0] + '<div class="empty">Nothing matches that search.</div>';
+}
+
+/* Any script error becomes visible instead of silently killing a render. */
+window.addEventListener('error', ev => {
+  if (fromExtension(ev.error) || fromExtension(ev.filename)) return;
+  const m = ev.error && ev.error.stack ? ev.error.stack.split('\n').slice(0, 2).join(' — ') : ev.message;
+  $('#msg').innerHTML = '<div class="note bad"><b>Script error:</b> ' + esc(m) + '</div>';
+});
+window.addEventListener('unhandledrejection', ev => {
+  if (fromExtension(ev.reason)) return;
+  $('#msg').innerHTML = '<div class="note bad"><b>Background error:</b> ' + esc((ev.reason && ev.reason.message) || ev.reason) + '</div>';
+});
+
+/* One set of listeners on the document, bound at startup. Re-rendering a panel
+   used to throw its listeners away with it; nothing to lose now. */
+/* Toggling redraws the table under the finger, and Android sometimes dispatches
+   a second click at the same spot afterwards — which would shut the row you just
+   opened. One toggle per key per gesture. */
+let lastTap = { k: '', t: 0 };
+function onceperTap(k) {
+  const now = Date.now();
+  if (lastTap.k === k && now - lastTap.t < 500) return false;
+  lastTap = { k, t: now };
+  return true;
+}
+
+document.addEventListener('click', e => {
+  const pcl = e.target.closest && e.target.closest('[data-pclass]');
+  if (pcl) { S.prioClass = pcl.dataset.pclass; return renderPrio(); }
+  if (e.target.closest && e.target.closest('.pp-d')) return;   // reading a variant, not closing the design
+  const ppc = e.target.closest && e.target.closest('[data-prio]');
+  if (ppc) {
+    const k = ppc.dataset.prio;
+    if (!onceperTap('prio:' + k)) return;
+    S.openPrio.has(k) ? S.openPrio.delete(k) : S.openPrio.add(k);
+    return renderPrio();
+  }
+  const adj = e.target.closest && e.target.closest('[data-adj]');
+  if (adj) {
+    if (adj.disabled) return;
+    return adjust(adj.dataset.adj, Number(adj.dataset.d));
+  }
+  const pn = e.target.closest && e.target.closest('[data-party]');
+  if (pn) {
+    const k = pn.dataset.party;
+    if (!onceperTap('party:' + k)) return;
+    S.openParty.has(k) ? S.openParty.delete(k) : S.openParty.add(k);
+    return redrawCard(k.split('|').slice(1, 3).join('|'));
+  }
+  const sub2 = e.target.closest && e.target.closest('[data-asub]');
+  if (sub2) { S.asub = sub2.dataset.asub; return renderAllot(); }
+  if (e.target.closest && e.target.closest('.pr-d')) return;   // reading the detail, not closing it
+  const lotEl = e.target.closest && e.target.closest('[data-lot]');
+  if (lotEl) {
+    const k = lotEl.dataset.lot;
+    if (!onceperTap('lot:' + k)) return;
+    S.openLot.has(k) ? S.openLot.delete(k) : S.openLot.add(k);
+    return renderProduction();
+  }
+  const sb = e.target.closest && e.target.closest('[data-sort]');
+  if (sb) {
+    S.sortDesign = sb.dataset.sort;
+    return renderDesign();
+  }
+  const sub = e.target.closest && e.target.closest('tr.clik2');
+  if (sub) {
+    const k = sub.dataset.k;
+    if (!onceperTap('sub:' + k)) return;
+    S.openCust.has(k) ? S.openCust.delete(k) : S.openCust.add(k);
+    return renderDesign();
+  }
+  const row = e.target.closest && e.target.closest('tr.clik');
+  if (row) {
+    const k = row.dataset.k;
+    if (!onceperTap('row:' + k)) return;
+    S.open.has(k) ? S.open.delete(k) : S.open.add(k);
+    renderDesign();
+  }
+});
+
+function drillRows(g) {
+  const byLine = new Map(S.allocRows.map(r => [r.lineId, r]));
+  const kids = g.lines.map(ln => byLine.get(ln.id)).filter(Boolean)
+    .sort((a, b) => CATS.indexOf(a.category) - CATS.indexOf(b.category) || b.ordered - a.ordered);
+  let h = '<tr class="sub-h"><td></td><td colspan="6">Parties ordering DES-' + esc(g.design) + ' · ' + esc(title(g.color)) + ' · ' + esc(g.size) + '</td></tr>';
+  for (const k of kids) {
+    const ck = g.key + '::' + k.lineId;
+    const open = S.openCust.has(ck);
+    h += '<tr class="sub clik2" data-k="' + esc(ck) + '"><td></td>' +
+      '<td colspan="2">' + esc(k.customer) + '</td>' +
+      '<td><span class="tag t-' + k.category + '">' + k.category + '</span></td>' +
+      '<td class="n">' + k.ordered + '</td>' +
+      '<td class="n ' + (k.allocated ? 'full' : 'none') + '">' + (k.allocated || '—') + '</td>' +
+      '<td class="n ' + (k.balance ? 'bal' : 'none') + '">' + (k.balance || '—') + '</td></tr>';
+    if (open) {
+      h += '<tr class="detail"><td></td><td colspan="6">' +
+        '<span class="dk">Order</span> ' + esc(k.order || '—') +
+        ' <span class="dk">Dated</span> ' + esc(k.date || '—') +
+        (k.ranges.length ? ' <span class="dk">Sizes reserved</span> ' + k.ranges.map(x => esc(x.size) + '&times;' + x.pieces).join(', ') : '') +
+        ' <span class="dk">Dispatch</span> ' + dispatchCell(g.design, g.color, g.size, k.ordered, k.allocated) +
+        (k.notes && k.notes.length
+          ? '<div class="nt">' + k.notes.map(n => '<span class="nt-i"><span class="dk">' + esc(n.label) + '</span> ' + esc(n.text) + '</span>').join('') + '</div>'
+          : '') +
+        '</td></tr>';
+    }
+  }
+  return h;
+}
+
+/* ---------- customer wise ---------- */
+function renderCustomer() {
+  const map = new Map();
+  for (const ln of S.lines) {
+    const key = ln.ckey + '|' + ln.design + '|' + ln.color + '|' + ln.sizeLabel;
+    if (!map.has(key)) map.set(key, { customer: ln.customer, ckey: ln.ckey, design: ln.design, color: ln.color, size: ln.sizeLabel, qty: 0, got: 0 });
+    map.get(key).qty += ln.qty;
+  }
+  for (const r of S.allocRows) {
+    const g = map.get(custKey(r.customer) + '|' + r.design + '|' + r.color + '|' + r.size);
+    if (g) g.got += r.allocated;
+  }
+  const q = S.q.cust.trim().toLowerCase();
+  const rows = [...map.values()]
+    .filter(r => hits(q, r.design, r.color, r.customer))
+    .sort((a, b) => a.customer.localeCompare(b.customer)
+    || a.design.localeCompare(b.design, undefined, { numeric: true })
+    || a.color.localeCompare(b.color)
+    || String(a.size).localeCompare(String(b.size), undefined, { numeric: true }));
+
+  let h = '<h2 class="sec">Customer wise pending orders</h2>' +
+    '<p class="exp">' + rows.length + ' rows across ' + new Set(rows.map(r => r.ckey)).size + ' parties · ' +
+    rows.reduce((t, r) => t + r.qty, 0) + ' pieces pending.</p>' +
+    (q ? '<p class="hit">Matching “' + esc(S.q.cust.trim()) + '”</p>' : '');
+  h += '<div class="tw"><table><thead><tr><th>Design</th><th>Colour</th><th>Size</th><th class="n">Pend</th><th class="n">Allot</th><th>Dispatch</th></tr></thead><tbody>';
+  let last = null;
+  for (const r of rows) {
+    if (r.customer !== last) {
+      h += '<tr class="grp"><td colspan="6">' + esc(r.customer) +
+        (S.cats[r.ckey] ? ' <span class="tag t-' + S.cats[r.ckey] + '">' + S.cats[r.ckey] + '</span>' : '') + '</td></tr>';
+      last = r.customer;
+    }
+    h += '<tr><td>DES-' + esc(r.design) + '</td><td class="wrap">' + esc(title(r.color)) + '</td><td>' + esc(r.size) + '</td>' +
+      '<td class="n">' + r.qty + '</td>' +
+      '<td class="n ' + (r.got ? 'full' : 'none') + '">' + (r.got || '—') + '</td>' +
+      '<td>' + dispatchCell(r.design, r.color, r.size, r.qty, r.got) + '</td></tr>';
+  }
+  $('#cust-body').innerHTML = rows.length
+    ? h + '</tbody></table></div>'
+    : h + '<div class="empty">Nothing matches that search.</div>';
+}
+
+/* ---------- production (from VastraApp jobslips) ----------
+   One row per design with work out at karigars right now, laid out like the
+   Set Tracker board: where each component is — main piece, inner, bottoms,
+   extra. Read only; it reflects whatever the Jobslips tab says. */
+
+const JOBS_TAB = 'Jobslips';
+const J_COLS = ['Date', 'Jobslip No', 'Manual challan no.', 'Karigar Name', 'Job Type', 'Expected Date',
+  'Design Name', 'Piece Name', 'Color Name', 'Color qty', 'Remaining Design Qty.', 'Jobslip Status',
+  'Last Received Date', 'Transfer From Jobslip No.'];
+
+const ROLES = ['main', 'inner', 'bottoms', 'extra'];
+const ROLE_LABEL = { main: 'Main', inner: 'Inner', bottoms: 'Bottoms', extra: 'Extra' };
+const ROLE_OF = {
+  jacket: 'main', coat: 'main', waistcoat: 'main', jodhpuri: 'main', blazer: 'main', sherwani: 'main', kurta: 'main',
+  shirt: 'inner', 't shirt': 'inner', 'tshirt': 'inner', 't-shirt': 'inner',
+  pant: 'bottoms', pent: 'bottoms', trouser: 'bottoms', pajama: 'bottoms', breeches: 'bottoms',
+};
+const roleOf = p => ROLE_OF[String(p || '').trim().toLowerCase()] || 'extra';
+const pieceName = p => { const s = String(p || '').trim(); return /^pent$/i.test(s) ? 'Pant' : s; };
+
+/* VastraApp writes dd-mm-yyyy; once pasted into Sheets it may come back as dd/mm/yyyy or 9-Jan-2026 */
+function jDate(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);
+  if (m) return Date.UTC(+m[3] < 100 ? 2000 + +m[3] : +m[3], +m[2] - 1, +m[1]);
+  m = s.match(/^(\d{1,2})[-\s]([A-Za-z]{3})[a-z]*[-\s,]+(\d{4})$/);
+  if (m && MON[m[2].toLowerCase()] !== undefined) return Date.UTC(+m[3], MON[m[2].toLowerCase()], +m[1]);
+  return null;
+}
+const dayMs = 86400000;
+const todayMs = () => { const d = new Date(); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); };
+const fmtDay = ms => ms ? shortDate(new Date(ms).toISOString().slice(0, 10)) : '—';
+
+function stageShort(job) {
+  const j = String(job || '').toLowerCase();
+  if (j.includes('stitch')) return 'Stitching';
+  if (j.includes('button') || j.includes('kaanch')) return 'Button';
+  if (j.includes('wash')) return 'Washing';
+  if (j.includes('embroid')) return 'Embroidery';
+  if (j.includes('print')) return 'Printing';
+  if (j.includes('fus')) return 'Fusing';
+  if (j.includes('cut')) return 'To cut';
+  if (j.includes('idle')) return 'Idle';
+  return job || '—';
+}
+
+const Jobs = {
+  slips: [],
+
+  build(rows) {
+    const slips = (rows || []).map((r, i) => {
+      const rem = r['Remaining Design Qty.'];
+      return {
+        i, no: String(r['Jobslip No'] || '').trim(), date: jDate(r['Date']),
+        karigar: String(r['Karigar Name'] || '').trim(), job: String(r['Job Type'] || '').trim(),
+        design: stripDes(r['Design Name']), piece: pieceName(r['Piece Name']),
+        color: String(r['Color Name'] || '').trim(), qty: Number(r['Color qty'] || 0),
+        remaining: rem === '' || rem == null ? null : Number(rem),
+        pending: /pending/i.test(String(r['Jobslip Status'] || '')),
+        expected: jDate(r['Expected Date']), received: jDate(r['Last Received Date']),
+        lot: String(r['Manual challan no.'] || '').trim(),
+        from: String(r['Transfer From Jobslip No.'] || '').trim(),
+        parent: null, depth: 0,
+      };
+    }).filter(s => s.design && s.no);
+
+    // Jobslip numbers restart, so a transfer is linked to the slip with that
+    // number for the same design, piece and colour, dated on or before it.
+    for (const s of slips) {
+      if (!s.from) continue;
+      let best = null;
+      for (const p of slips) {
+        if (p === s || p.no !== s.from || p.design !== s.design || p.piece !== s.piece) continue;
+        if (p.color && s.color && p.color.toLowerCase() !== s.color.toLowerCase()) continue;
+        if (p.date && s.date && p.date > s.date) continue;
+        if (!best || (p.date || 0) > (best.date || 0)) best = p;
+      }
+      s.parent = best;
+    }
+    for (const s of slips) {
+      let p = s, n = 0;
+      while (p.parent && n < 30) { p = p.parent; n++; if (!s.lot && p.lot) s.lot = p.lot; }
+      s.depth = n; s.root = p;
+    }
+    this.slips = slips;
+    this.newest = Math.max(0, ...slips.map(s => s.date || 0));
+    return this;
+  },
+
+  /* one row per design that has anything out right now */
+  rows() {
+    const by = new Map();
+    for (const s of this.slips) { if (!by.has(s.design)) by.set(s.design, []); by.get(s.design).push(s); }
+    const today = todayMs();
+    const out = [];
+    for (const [design, all] of by) {
+      const left = s => (s.remaining != null && s.remaining >= 0 ? s.remaining : s.qty);
+      const pend = all.filter(s => s.pending && left(s) > 0);
+      if (!pend.length) continue;
+      // the current round of work: from where the oldest open chain started
+      const starts = pend.map(s => s.root.date).filter(Boolean);
+      const from = starts.length ? Math.min(...starts) - 7 * dayMs : -Infinity;
+      const cycle = all.filter(s => (s.date || 0) >= from);
+      // a design normally has the components it has ever had
+      const usual = new Set(all.map(s => roleOf(s.piece)));
+      usual.add('main');
+
+      const comps = ROLES.map(role => {
+        const ss = cycle.filter(s => roleOf(s.piece) === role);
+        const at = ss.filter(s => s.pending && left(s) > 0).map(s => Object.assign({}, s, { left: left(s) }));
+        const exp = at.map(a => a.expected).filter(Boolean);
+        const lead = at.slice().sort((a, b) => a.depth - b.depth || (a.date || 0) - (b.date || 0))[0] || null;
+        return {
+          role, required: usual.has(role), slips: ss, at, lead,
+          pieces: [...new Set(ss.map(s => s.piece))],
+          state: at.length ? 'at' : (ss.length ? 'done' : 'none'),
+          due: at.length && exp.length === at.length ? Math.max(...exp) : null,
+          // the date written on the jobslip; split work shows the last of its dates
+          when: exp.length ? Math.max(...exp) : null,
+          late: exp.some(e => e < today),
+          doneOn: !at.length && ss.length ? Math.max(...ss.map(s => s.received || s.date || 0)) : null,
+        };
+      });
+      const req = comps.filter(c => c.required);
+      const status = req.every(c => c.state === 'done') ? 'done'
+        : comps.some(c => c.late) ? 'late'
+        : (req.some(c => c.state === 'none') || comps.some(c => c.state === 'at' && !c.due)) ? 'incomplete'
+        : 'ontrack';
+      const oldest = Math.min(...pend.map(s => s.date || today));
+      const dues = pend.map(s => s.expected).filter(Boolean);
+      const upcoming = dues.filter(d => d >= today);
+      const overdue = dues.filter(d => d < today);
+      const next = upcoming.length ? Math.min(...upcoming) : null;
+      const lastLate = overdue.length ? Math.max(...overdue) : null;
+      const lots = [...new Set(cycle.map(s => s.lot).filter(Boolean))];
+      out.push({
+        design, comps, status, lots, oldest, next, lastLate,
+        title: lots.length === 1 && lots[0].indexOf(design) === 0 ? lots[0] : design,
+        karigars: [...new Set(pend.map(s => s.karigar))],
+        colors: [...new Set(cycle.map(s => s.color))],
+      });
+    }
+    const band = r => r.next != null ? 0 : r.lastLate != null ? 1 : 2;
+    return out.sort((a, b) => band(a) - band(b)
+      || (band(a) === 0 ? a.next - b.next : 0)
+      || (band(a) === 1 ? b.lastLate - a.lastLate : 0)
+      || a.design.localeCompare(b.design, undefined, { numeric: true }));
+  },
+};
+
+const DOT2 = { ontrack: 'good', late: 'bad', incomplete: 'warn', done: 'done' };
+const STATUS_LABEL = { ontrack: 'on track', late: 'late', incomplete: 'incomplete', done: 'done' };
+
+const STAGE_CELL = { Stitching: 'Stitch', Button: 'Button', Washing: 'Wash', Embroidery: 'Embr.', Printing: 'Print', Fusing: 'Fuse', 'To cut': 'To cut', Idle: 'Idle' };
+function prodCell(c) {
+  if (c.state === 'done') return '<span class="pc pc-ok">✓</span>';
+  if (c.state === 'none') return '<span class="pc pc-no">—</span>';
+  const st = stageShort(c.lead && c.lead.job);
+  // more than one place at once (part stitched, part at buttons) gets a +
+  const places = new Set(c.at.map(a => stageShort(a.job) + '|' + a.karigar)).size;
+  return '<span class="pc pc-stage"><span class="pc-s">' + esc(STAGE_CELL[st] || st) + (places > 1 ? '<sup>+</sup>' : '') + '</span>' +
+    (c.when ? '<small class="pc-d' + (c.when < todayMs() ? ' pc-dl' : '') + '">' + fmtDay(c.when) + '</small>' : '') + '</span>';
+}
+
+function renderProduction() {
+  const body = $('#prod-body');
+  if (!body) return;
+  if (!S.jobRows || !S.jobRows.length) {
+    body.innerHTML = '<div class="empty">Paste the VastraApp jobcard export into a tab called “' + esc(JOBS_TAB) +
+      '” in your pending-order sheet, or load the file here.</div>';
+    return;
+  }
+  Jobs.build(S.jobRows);
+  const all = Jobs.rows();
+  const q = (S.q.prod || '').trim().toLowerCase();
+  const rows = q ? all.filter(r => hits(q, r.design, r.colors.join(' '),
+    r.lots.join(' ') + ' ' + r.karigars.join(' ') + ' ' + r.comps.map(c => c.pieces.join(' ')).join(' '))) : all;
+  const count = { ontrack: 0, late: 0, incomplete: 0, done: 0 };
+  for (const r of all) count[r.status]++;
+  const newest = Jobs.newest ? fmtDay(Jobs.newest) : '—';
+  const staleDays = Jobs.newest ? Math.round((todayMs() - Jobs.newest) / dayMs) : 0;
+
+  let h = '<div class="pr-sum"><span class="pr-n">' + all.length + ' designs out</span>' +
+    ['ontrack', 'late', 'incomplete', 'done'].map(k =>
+      '<span class="sm"><i class="sdot ' + DOT2[k] + '"></i>' + count[k] + ' ' + STATUS_LABEL[k] + '</span>').join('') + '</div>';
+  if (staleDays > 14) {
+    h += '<div class="note">Latest jobslip here is from <b>' + newest + '</b>. Once new jobslips are entered and pasted in, this board shows the current position.</div>';
+  }
+  h += '<div class="pr-grid pr-head"><span>Pattern</span><span>Main</span><span>Inner</span><span>Bottoms</span><span>Extra</span></div>';
+  h += '<p class="pr-key">Where each part is, with the expected date from its jobslip · ✓ back · + split across karigars · — not started · soonest arrivals first, overdue and undated last</p>';
+  if (!rows.length) h += '<div class="empty">Nothing matches that search.</div>';
+  for (const r of rows) {
+    const open = S.openLot.has(r.design);
+    h += '<div class="pr-row' + (open ? ' open' : '') + '" data-lot="' + esc(r.design) + '">' +
+      '<div class="pr-grid"><span class="pr-p"><i class="sdot ' + DOT2[r.status] + '"></i><b>' + esc(r.title) + '</b></span>' +
+      r.comps.map(prodCell).join('') + '</div>';
+    if (open) h += prodDetail(r);
+    h += '</div>';
+  }
+  body.innerHTML = h;
+}
+
+function prodDetail(r) {
+  const today = todayMs();
+  let h = '<div class="pr-d">';
+  if (r.lots.length) h += '<div class="pr-meta">Lot ' + r.lots.map(esc).join(', ') + ' · out since ' + fmtDay(r.oldest) + '</div>';
+  for (const c of r.comps) {
+    if (!c.slips.length && !c.required) continue;
+    h += '<div class="pr-c"><div class="pr-ch"><b>' + ROLE_LABEL[c.role] + '</b>' +
+      (c.pieces.length ? ' · ' + c.pieces.map(esc).join(', ') : '') +
+      '<span>' + (c.state === 'done' ? 'done ' + fmtDay(c.doneOn) : c.state === 'none' ? 'not started' : 'in progress') + '</span></div>';
+    for (const a of c.at.slice().sort((x, y) => x.depth - y.depth || x.color.localeCompare(y.color))) {
+      h += '<div class="pr-at"><span class="pr-who">' + esc(a.karigar || '—') + '</span>' +
+        '<span>' + esc(stageShort(a.job)) + ' · ' + esc(a.color || '—') + ' · <b>' + a.left + ' pcs</b></span>' +
+        '<span class="pr-when">since ' + fmtDay(a.date) +
+        (a.expected ? ' · due <span class="' + (a.expected < today ? 'bal' : 'ready') + '">' + fmtDay(a.expected) + '</span>' : ' · no due date') +
+        ' · ' + esc(a.no) + '</span></div>';
+    }
+    const done = c.slips.filter(s => !s.pending);
+    if (done.length) {
+      h += '<div class="pr-hist">Done: ' + done.sort((x, y) => (x.date || 0) - (y.date || 0)).map(s =>
+        esc(stageShort(s.job)) + ' (' + esc(s.karigar) + ', ' + esc(s.color) + ' ' + s.qty + ')').join(' → ') + '</div>';
+    }
+    h += '</div>';
+  }
+  // what is owed on this design, by colour and size
+  const owed = new Map();
+  for (const ln of (S.lines || [])) {
+    if (ln.design !== r.design) continue;
+    const k = ln.color + '|' + ln.sizeLabel;
+    if (!owed.has(k)) owed.set(k, { color: ln.color, size: ln.sizeLabel, pcs: 0, parties: new Set() });
+    const o = owed.get(k); o.pcs += ln.qty; o.parties.add(ln.customer);
+  }
+  const ow = [...owed.values()].sort((a, b) => a.color.localeCompare(b.color) || String(a.size).localeCompare(String(b.size), undefined, { numeric: true }));
+  h += '<div class="pr-c"><div class="pr-ch"><b>Pending orders</b><span>' +
+    ow.reduce((t, o) => t + o.pcs, 0) + ' pcs</span></div>';
+  h += ow.length ? ow.map(o => '<div class="pr-o"><span>' + esc(title(o.color)) + ' ' + esc(o.size) + '</span><span>' +
+      o.parties.size + ' part' + (o.parties.size === 1 ? 'y' : 'ies') + '</span><b>' + o.pcs + ' pcs</b></div>').join('')
+    : '<div class="pr-hist">No pending orders for this design.</div>';
+  h += '</div></div>';
+  return h;
+}
+
+/* jobcard file loaded straight into the tab */
+async function loadJobFile(f) {
+  try {
+    const { rows } = await readSheet(f, 'Jobcard');
+    const bad = missingCols(rows, ['Jobslip No', 'Design Name', 'Piece Name', 'Jobslip Status'], 'jobcard');
+    if (bad) return msg(bad, 'bad');
+    S.jobRows = slim(rows, J_COLS);
+    S.meta.jobs = f.name;
+    S.meta.seen = S.meta.seen || {}; S.meta.seen.jobs = Date.now(); S.meta.fromFile = Object.assign(S.meta.fromFile || {}, { jobs: true });
+    save(); renderProduction();
+  } catch (e) { msg('That file ' + esc(e.message || 'could not be opened') + '.', 'bad'); }
+}
+
+/* ---------- manual allotment ----------
+   Done by hand, in whole sets. A set is one piece of every size in its range,
+   so 0-3 = 4 pcs, 0-8 = 9, 0-10 = 11. Stock is tracked per individual size,
+   because a 0-8 set and a 0-3 set both draw on sizes 0 to 3. */
+
+const Manual = {
+  sets: {},
+  load() { this.sets = store.get('allot.manual') || {}; },
+  save() { store.set('allot.manual', this.sets); },
+};
+const mkey = (ckey, design, color, size) => ckey + '|' + design + '|' + color + '|' + size;
+
+function allotGroups() {
+  const groups = new Map();
+  for (const ln of S.lines) {
+    const gk = ln.design + '|' + ln.color;
+    if (!groups.has(gk)) groups.set(gk, { gk, design: ln.design, color: ln.color, byKey: new Map() });
+    const g = groups.get(gk);
+    const k = mkey(ln.ckey, ln.design, ln.color, ln.sizeLabel);
+    if (!g.byKey.has(k)) g.byKey.set(k, { key: k, customer: ln.customer, ckey: ln.ckey, size: ln.sizeLabel, sizes: ln.sizes, pcs: 0, date: ln.date, orders: [] });
+    const e = g.byKey.get(k);
+    e.pcs += ln.qty;
+    e.orders.push({ no: ln.order, date: ln.dateRaw, t: ln.date || 0, pcs: ln.qty });
+    if (ln.date && (!e.date || ln.date < e.date)) e.date = ln.date;
+  }
+  for (const [, g] of groups) {
+    // Allotment works from VastraApp's stock exactly as reported. The
+    // in-production hold only shapes dispatch dates on the Pending tabs.
+    const bucket = ((S.netted || S.stockMap) && (S.netted || S.stockMap).get(g.gk)) || {};
+    g.avail = {};
+    for (const s of Object.keys(bucket)) g.avail[s] = bucket[s];
+    g.freePcs = Object.values(g.avail).reduce((a, b) => a + b, 0);
+    g.lines = [...g.byKey.values()].map(e => Object.assign(e, {
+      per: e.sizes.length,
+      orderedSets: Math.floor(e.pcs / e.sizes.length),
+      cat: S.cats[e.ckey] || S.defCat || 'R3',
+    })).sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat)
+      || (a.date || 0) - (b.date || 0) || a.customer.localeCompare(b.customer));
+    delete g.byKey;
+    settle(g);
+  }
+  return groups;
+}
+
+/* Fit saved allotments inside today's stock and orders.
+   Stock is split into pools first — one per range, exactly as it sits on the
+   shelf — and each order draws only from the pool of its own range. A 0-8 set
+   is never broken open to fill a 0-3 order. When a new file shrinks stock,
+   higher categories keep theirs and the lowest give way first. Nothing is
+   trimmed until a stock file is actually loaded, or an empty map would wipe it. */
+/* Stock as it sits: first the sets VastraApp has booked, range by range and
+   never more than were booked; a negative range eats into the wider sets it
+   came out of, which the per-size counts already reflect. Whatever pieces are
+   left after that — the 0-5 halves of 0-10 sets whose 6-10 went out — then
+   form sets of their own. So 6-10 booked as 6-10 stays 6-10. */
+function carveBooked(g) {
+  const left = Object.assign({}, g.avail);
+  const out = new Map();
+  const lab = sz => sz.length > 1 ? sz[0] + '-' + sz[sz.length - 1] : String(sz[0]);
+  const take = (sz, cap) => {
+    const n = Math.min(cap, ...sz.map(s => left[s] || 0));
+    if (n <= 0) return;
+    for (const s of sz) left[s] -= n;
+    const k = lab(sz);
+    out.set(k, { size: k, sets: (out.has(k) ? out.get(k).sets : 0) + n, w: sz.length });
+  };
+  const byWidth = (a, b) => b.length - a.length || a[0] - b[0];
+  const booked = [];
+  for (const e of ledgerFor(g.design, g.color)) {
+    if (e.q <= 0) continue;
+    const sz = expandSize(e.size);
+    if (!sz || sz.length < 2) continue;
+    booked.push({ sz, n: Math.floor(e.q / sz.length) });
+  }
+  booked.sort((a, b) => byWidth(a.sz, b.sz));
+  for (const b of booked) take(b.sz, b.n);
+  for (const r of rangesFor(g).filter(r => r.length > 1).sort(byWidth)) take(r, Infinity);
+  const loose = Object.keys(left).filter(s => left[s] > 0).sort((a, b) => a - b).map(s => ({ size: s, pcs: left[s] }));
+  return { sets: [...out.values()].map(x => ({ size: x.size, sets: x.sets, pcs: x.sets * x.w })), loose };
+}
+
+function settle(g) {
+  // Stock is tracked piece by piece in each size. A 0-5 order takes one piece
+  // of sizes 0 to 5 — from loose 0-5 sets first in practice, and from a 0-10 set
+  // after that, which leaves its 6-10 half free for someone else.
+  const left = Object.assign({}, g.avail);
+  g.trimmed = 0;
+  const canTrim = !!S.stockRows;
+  for (const l of g.lines) {
+    const saved = Manual.sets[l.key] || 0;
+    if (!canTrim) { l.sets = saved; continue; }
+    const room = Math.max(0, Math.min(...l.sizes.map(s => left[s] || 0)));
+    const got = Math.max(0, Math.min(saved, l.orderedSets, room));
+    if (got !== saved) {
+      g.trimmed += saved - got;
+      if (got) Manual.sets[l.key] = got; else delete Manual.sets[l.key];
+    }
+    l.sets = got;
+    for (const s of l.sizes) left[s] = (left[s] || 0) - got;
+  }
+  g.left = left;
+  // shown as the most complete sets the pieces make: halves join into full sets
+  const rs = rangesFor(g);
+  g.shelfAll = carve(g.avail, rs);
+  g.shelfNow = carve(left, rs);
+}
+
+/* What is physically on the shelf, as non-overlapping sets. Widest range first:
+   16 sets of 0-8 take sizes 0-8, and only then do the leftover 0-3 pieces
+   form 0-3 sets. Anything that fits no range is shown as loose pieces. */
+function carve(counts, ranges) {
+  const left = Object.assign({}, counts);
+  const out = [];
+  const cands = ranges.slice().sort((a, b) => b.length - a.length || a[0] - b[0]);
+  for (const r of cands) {
+    const n = Math.min(...r.map(s => left[s] || 0));
+    if (n > 0) {
+      out.push({ size: r.length > 1 ? r[0] + '-' + r[r.length - 1] : String(r[0]), sets: n, pcs: n * r.length });
+      for (const s of r) left[s] -= n;
+    }
+  }
+  const loose = Object.keys(left).filter(s => left[s] > 0).sort((a, b) => a - b);
+  return { sets: out, loose: loose.map(s => ({ size: s, pcs: left[s] })) };
+}
+
+function carveText(c) {
+  const parts = c.sets.map(x => x.sets + ' × ' + esc(x.size));
+  if (c.loose.length) parts.push(c.loose.map(x => x.pcs + ' loose in ' + esc(x.size)).join(', '));
+  return parts.length ? parts.join(' + ') : 'nothing';
+}
+
+/* VastraApp's own balances for one design and colour, exactly as its report lists them */
+let ledgerIdx = null, ledgerSrc = null;
+function ledgerFor(design, color) {
+  if (ledgerSrc !== S.stockRows) {
+    ledgerIdx = new Map(); ledgerSrc = S.stockRows;
+    for (const r of (S.stockRows || [])) {
+      const q = Number(r['Current Stock'] || 0);
+      if (!q) continue;
+      const k = stripDes(r['Design Name']) + '|' + normColor(r['Color Name']);
+      if (!ledgerIdx.has(k)) ledgerIdx.set(k, []);
+      ledgerIdx.get(k).push({ size: String(r['Size']).trim(), q });
+    }
+    for (const [, v] of ledgerIdx) v.sort((a, b) => String(a.size).localeCompare(String(b.size), undefined, { numeric: true }));
+  }
+  return ledgerIdx.get(design + '|' + color) || [];
+}
+
+/* Pools as text, saying where a pool came from when it is bigger than VastraApp's
+   own figure for that range — e.g. 13 × 0-3 is 9 booked as 0-3 plus 4 left over
+   from 0-8 sets whose 4-8 half went out. */
+function poolText(g, pools, loose, explain) {
+  const ledger = ledgerFor(g.design, g.color);
+  const parts = Object.keys(pools).filter(k => pools[k] > 0)
+    .sort((a, b) => (g.width[b] || 0) - (g.width[a] || 0) || String(a).localeCompare(String(b), undefined, { numeric: true }))
+    .map(k => {
+      let t = pools[k] + ' × ' + esc(k);
+      if (explain) {
+        const w = g.width[k] || 1;
+        const own = ledger.find(e => e.size === k);
+        const booked = own && own.q > 0 ? Math.floor(own.q / w) : 0;
+        const extra = pools[k] - booked;
+        if (extra > 0 && booked >= 0) {
+          const sz = expandSize(k) || [];
+          const parent = ledger.filter(e => e.q > 0 && e.size !== k)
+            .find(e => { const r = expandSize(e.size) || []; return r.length > sz.length && sz.every(s => r.includes(s)); });
+          if (parent) t += ' <span class="ag-x">(' + (booked ? booked + ' booked as ' + esc(k) + ' + ' : '') +
+            extra + ' left over from ' + esc(parent.size) + ' sets)</span>';
+        }
+      }
+      return t;
+    });
+  if (loose && loose.length) parts.push(loose.map(x => x.pcs + ' loose in size ' + esc(x.size)).join(', '));
+  return parts.length ? parts.join(' + ') : 'nothing';
+}
+
+function rangesFor(g) {
+  const seen = new Set(); const out = [];
+  const add = sizes => { const k = sizes.join(','); if (sizes.length && !seen.has(k)) { seen.add(k); out.push(sizes); } };
+  for (const l of g.lines) add(l.sizes);
+  // every range VastraApp lists, negative ones included: a negative 0-5 leaves
+  // 6-10 halves behind, and those are sets in their own right
+  for (const e of ledgerFor(g.design, g.color)) { const s = expandSize(e.size); if (s) add(s); }
+  return out;
+}
+
+function stockChips(g) {
+  const w = x => x.pcs / x.sets;
+  const all = new Map(g.shelfAll.sets.map(x => [x.size, x]));
+  const now = new Map(g.shelfNow.sets.map(x => [x.size, x]));
+  const any = g.lines.some(l => l.sets);
+  const keys = [...new Set([...all.keys(), ...now.keys()])].sort((a, b) => {
+    const wa = (all.get(a) || now.get(a)), wb = (all.get(b) || now.get(b));
+    return w(wb) - w(wa) || String(a).localeCompare(String(b), undefined, { numeric: true });
+  });
+  if (!keys.length) return '<span class="fr fr-0">no complete sets</span>';
+  return keys.map(k => {
+    const total = all.has(k) ? all.get(k).sets : 0;
+    const left = now.has(k) ? now.get(k).sets : 0;
+    const per = w(all.get(k) || now.get(k));
+    let txt;
+    if (!any) txt = esc(k) + ' = ' + total + ' set' + (total === 1 ? '' : 's') + ' (' + total * per + ' pcs)';
+    else if (total) txt = esc(k) + ' = ' + left + ' of ' + total + ' sets left (' + left * per + ' pcs)';
+    else txt = esc(k) + ' = ' + left + ' set' + (left === 1 ? '' : 's') + ' left over (' + left * per + ' pcs)';
+    return '<span class="fr' + (left ? '' : ' fr-0') + '">' + txt + '</span>';
+  }).join('');
+}
+
+/* how many more sets of this range still fit */
+const roomFor = (g, l) => Math.max(0, Math.min(...l.sizes.map(s => (g.left && g.left[s]) || 0)));
+
+function allotCard(g) {
+
+  const ledger = ledgerFor(g.design, g.color);
+  const netTotal = Object.values((S.netted && S.netted.get(g.gk)) || {}).reduce((a, b) => a + b, 0);
+  const held = Math.max(0, netTotal - g.freePcs);
+  const allotted = g.lines.reduce((t, l) => t + l.sets * l.per, 0);
+
+  let h = '<div class="ag" data-g="' + esc(g.gk) + '">' +
+    '<div class="ag-h"><b>DES-' + esc(g.design) + '</b> ' + esc(title(g.color)) +
+    '<span class="ag-t">' + g.freePcs + ' pcs' + (allotted ? ' · ' + allotted + ' allotted' : '') + '</span></div>' +
+    '<div class="ag-f">' + stockChips(g) + '</div>' +
+    (ledger.reduce((t, e) => t + e.q, 0) !== netTotal
+      ? '<div class="ag-w">Some sizes are below zero in VastraApp — worth checking the entries.</div>'
+      : '');
+  // one block per size range, widest first, like the stock line above
+  const bySize = new Map();
+  for (const l of g.lines) {
+    if (!bySize.has(l.size)) bySize.set(l.size, []);
+    bySize.get(l.size).push(l);
+  }
+  const sizes = [...bySize.keys()].sort((a, b) =>
+    (bySize.get(b)[0].per - bySize.get(a)[0].per) || String(a).localeCompare(String(b), undefined, { numeric: true }));
+
+  for (const sz of sizes) {
+    const ls = bySize.get(sz);
+    const wanted = ls.reduce((t, l) => t + l.orderedSets, 0);
+    const given = ls.reduce((t, l) => t + l.sets, 0);
+    const pool = Math.max(0, Math.min(...ls[0].sizes.map(s => g.avail[s] || 0)));
+    h += '<div class="sz-h"><b>' + esc(sz) + '</b>' +
+      '<span>' + ls.length + ' part' + (ls.length === 1 ? 'y' : 'ies') + ' · ' + wanted + ' set' + (wanted === 1 ? '' : 's') + ' ordered' +
+      (given ? ' · ' + given + ' allotted' : '') + '</span>' +
+      (pool ? '' : '<span class="nofit">no ' + esc(sz) + ' sets on the shelf</span>') + '</div>';
+
+    for (const l of ls) {
+      const room = roomFor(g, l);
+      const canAdd = l.sets < l.orderedSets && room > 0;
+      const open = S.openParty.has(l.key);
+      h += '<div class="ar">' +
+        '<div class="ar-n"><span class="pn" data-party="' + esc(l.key) + '">' + esc(l.customer) +
+        '<span class="pn-c">' + (open ? '▾' : '▸') + '</span></span> <span class="tag t-' + l.cat + '">' + l.cat + '</span>' +
+        '<div class="ar-o">ordered ' + l.orderedSets + ' set' + (l.orderedSets === 1 ? '' : 's') + ' (' + l.pcs + ' pcs)' +
+        (l.sets < l.orderedSets && pool ? ' · <span class="' + (room ? 'fits' : 'nofit') + '">' +
+          (room ? Math.min(room, l.orderedSets - l.sets) + ' more can go' : 'none left') + '</span>' : '') +
+        '</div></div>' +
+        '<div class="step">' +
+        '<button type="button" class="sb" data-adj="' + esc(l.key) + '" data-d="-1"' + (l.sets ? '' : ' disabled') + ' aria-label="One set fewer">−</button>' +
+        '<span class="sv' + (l.sets ? ' on' : '') + '">' + l.sets + '</span>' +
+        '<button type="button" class="sb" data-adj="' + esc(l.key) + '" data-d="1"' + (canAdd ? '' : ' disabled') + ' aria-label="One set more">+</button>' +
+        '</div><div class="ar-p">' + (l.sets ? l.sets * l.per + ' pcs' : '') + '</div></div>';
+      if (open) {
+        const os = l.orders.slice().sort((a, b) => a.t - b.t);
+        h += '<div class="od">' + os.map(o =>
+          '<div class="od-r"><span class="dk">Order</span> ' + esc(o.no || '—') +
+          ' <span class="dk">Dated</span> ' + esc(o.date || '—') +
+          ' <span class="od-q">· ' + Math.floor(o.pcs / l.per) + ' set' + (Math.floor(o.pcs / l.per) === 1 ? '' : 's') + ' · ' + o.pcs + ' pcs</span></div>'
+        ).join('') + '</div>';
+      }
+    }
+  }
+  if (g.trimmed) h += '<div class="ag-w">' + g.trimmed + ' set' + (g.trimmed > 1 ? 's were' : ' was') + ' trimmed to fit the latest stock.</div>';
+  return h + '</div>';
+}
+
+function renderAllot() {
+  const body = $('#allot-body');
+  if (!body) return;
+  document.querySelectorAll('[data-asub]').forEach(b => b.classList.toggle('on', b.dataset.asub === S.asub));
+  if (!S.lines.length) { body.innerHTML = '<div class="empty">Load the pending order file.</div>'; return; }
+  if (!S.stockRows) { body.innerHTML = '<div class="empty">Load the stock file — allotment can only draw on stock you have.</div>'; return; }
+  const groups = allotGroups();
+  Manual.save();
+  return S.asub === 'cust' ? renderAllotCust(groups, body) : renderAllotDesign(groups, body);
+}
+
+function renderAllotDesign(groups, body) {
+  const q = (S.q.allot || '').trim().toLowerCase();
+  const all = [...groups.values()];
+  const stocked = all.filter(g => g.freePcs > 0 || g.lines.some(l => l.sets));
+  const shown = stocked.filter(g => hits(q, g.design, g.color, g.lines.map(l => l.customer).join(' ')))
+    .sort((a, b) => a.design.localeCompare(b.design, undefined, { numeric: true }) || a.color.localeCompare(b.color));
+  const totalPcs = all.reduce((t, g) => t + g.lines.reduce((u, l) => u + l.sets * l.per, 0), 0);
+
+  let h = '<p class="exp">' + shown.length + ' design colours with stock to give out · ' + totalPcs + ' pcs allotted so far. ' +
+    (all.length - stocked.length) + ' more have orders but no free stock, so they are left out. ' +
+    '</p>';
+  if (!shown.length) h += '<div class="empty">Nothing matches that search.</div>';
+  for (const g of shown) h += allotCard(g);
+  body.innerHTML = h;
+}
+
+function renderAllotCust(groups, body) {
+  const q = (S.q.allot || '').trim().toLowerCase();
+  const per = new Map();
+  for (const [, g] of groups) for (const l of g.lines) {
+    if (!l.sets) continue;
+    if (!hits(q, g.design, g.color, l.customer)) continue;
+    if (!per.has(l.ckey)) per.set(l.ckey, { name: l.customer, cat: l.cat, items: [], pcs: 0 });
+    const c = per.get(l.ckey);
+    c.items.push({ g, l });
+    c.pcs += l.sets * l.per;
+  }
+  const list = [...per.values()].sort((a, b) => CATS.indexOf(a.cat) - CATS.indexOf(b.cat) || a.name.localeCompare(b.name));
+  const grand = list.reduce((t, c) => t + c.pcs, 0);
+
+  let h = '<p class="exp">' + list.length + ' parties with stock allotted · ' + grand + ' pcs in all. Allot on the Design wise tab.</p>';
+  if (!list.length) {
+    body.innerHTML = h + '<div class="empty">' + (q ? 'Nothing matches that search.' : 'Nothing allotted yet.') + '</div>';
+    return;
+  }
+  for (const c of list) {
+    h += '<div class="ag"><div class="ag-h"><b>' + esc(c.name) + '</b> <span class="tag t-' + c.cat + '">' + c.cat + '</span></div>';
+    c.items.sort((a, b) => a.g.design.localeCompare(b.g.design, undefined, { numeric: true }));
+    for (const { g, l } of c.items) {
+      const full = l.sets >= l.orderedSets;
+      h += '<div class="ci"><span>' + esc(g.design) + ' ' + esc(title(g.color)) + ' ' + esc(l.size) + '</span>' +
+        '<span class="' + (full ? 'full' : 'part') + '">' + (full ? '✓' : l.sets + ' of ' + l.orderedSets + ' sets') + '</span>' +
+        '<span class="ci-p">' + l.sets * l.per + ' pcs</span></div>';
+    }
+    h += '<div class="ct-t">Total ' + c.pcs + ' pcs</div></div>';
+  }
+  body.innerHTML = h;
+}
+
+function redrawCard(gk) {
+  const fresh = allotGroups().get(gk);
+  const el = document.querySelector('[data-g="' + CSS.escape(gk) + '"]');
+  if (el && fresh) el.outerHTML = allotCard(fresh); else renderAllot();
+}
+
+/* one tap = one set; only the touched card redraws, so the list does not jump */
+function adjust(key, d) {
+  const groups = allotGroups();
+  const gk = key.split('|').slice(1, 3).join('|');
+  const g = groups.get(gk);
+  if (!g) return;
+  const l = g.lines.find(x => x.key === key);
+  if (!l) return;
+  if (d > 0 && (l.sets >= l.orderedSets || roomFor(g, l) < 1)) return;
+  if (d < 0 && l.sets < 1) return;
+  const next = l.sets + d;
+  if (next) Manual.sets[key] = next; else delete Manual.sets[key];
+  Manual.save();
+  const fresh = allotGroups().get(gk);
+  const el = document.querySelector('[data-g="' + CSS.escape(gk) + '"]');
+  if (el && fresh) el.outerHTML = allotCard(fresh);
+  else renderAllot();
+}
+
+/* ---------- production priority ----------
+   Ranks designs for repeat production, out of 100, on five criteria. Every
+   figure is worked out per design → colour → size group (0–3 / 4+) first;
+   a design's score is the demand-weighted average of its variants, and the
+   variants stay visible so one strong colour cannot hide a weak one.
+   This ranks designs for attention. It does not set quantities. */
+
+const DEL_TAB = 'Delivery Challans';
+const D_COLS = ['Delivery Challan Number', 'Date', 'Customer Name', 'Customer State', 'Design Number', 'Color', 'Size', 'Quantity'];
+const PW = { vel: 20, dem: 20, cov: 15, fifo: 20, mkt: 25 };
+const CORE_STATES = { 'maharashtra': 'Maharashtra', 'gujarat': 'Gujarat', 'madhya pradesh': 'Madhya Pradesh' };
+const LOT_TARGET_DAYS = 90;          // a lot is expected to sell through in about three months
+const GRP = { S: '0–3', L: '4+' };
+const grpOf = s => (Number(s) <= 3 ? 'S' : 'L');
+const anyDate = v => purchaseDate(v) || jDate(v);
+const clamp01 = x => Math.max(0, Math.min(1, x));
+
+function prioClassOf(raw) {
+  const score = Math.round(raw);   // the class always matches the number shown
+  return score >= 80 ? 'P1' : score >= 65 ? 'P2' : score >= 45 ? 'P3' : 'P4';
+}
+const P_LABEL = { P1: 'High priority', P2: 'Good potential', P3: 'Monitor', P4: 'Low priority' };
+const C_LABEL = { broad: 'Broadly validated', partial: 'Partially validated', conc: 'Concentrated demand', thin: 'Insufficient evidence' };
+
+/* who bought, where, how often — shared by variants and whole designs */
+function marketOf(events) {
+  const total = events.reduce((t, e) => t + e.pcs, 0);
+  const byCust = new Map();
+  const regions = new Map();
+  let unknown = 0;
+  const challans = new Set();
+  for (const e of events) {
+    const c = byCust.get(e.cust) || { pcs: 0, ch: new Set() };
+    c.pcs += e.pcs; c.ch.add(e.challan || e.t); byCust.set(e.cust, c);
+    challans.add(e.challan || (e.cust + e.t));
+    if (!e.state) unknown += e.pcs;
+    else { const r = CORE_STATES[e.state] || 'Other'; regions.set(r, (regions.get(r) || 0) + e.pcs); }
+  }
+  const customers = byCust.size;
+  const top = customers ? Math.max(...[...byCust.values()].map(c => c.pcs)) : 0;
+  const topShare = total ? top / total : 0;
+  const repeaters = [...byCust.values()].filter(c => c.ch.size >= 2).length;
+  const k = regions.size;
+  const custScore = customers === 0 ? 0 : customers === 1 ? 1 : customers === 2 ? 2 : customers <= 4 ? 3 : customers <= 7 ? 4 : 5;
+  const regScore = k === 0 ? 0 : k === 1 ? 1.5 : k === 2 ? 3.5 : 5;
+  const repRate = customers ? repeaters / customers : 0;
+  const repScore = 5 * repRate;
+  const concScore = total ? 5 * clamp01((1 - topShare) / 0.75) : 0;
+  const score = (10 * custScore + 7 * regScore + 5 * repScore + 3 * concScore) / 25;
+  const conf = (total < 20 || challans.size < 3) ? 'thin'
+    : (topShare >= 0.6 || customers <= 2) ? 'conc'
+    : (customers >= 5 && topShare <= 0.35 && k >= 2) ? 'broad' : 'partial';
+  return {
+    total, customers, topShare, repeaters, repRate, regions: [...regions.keys()], k,
+    unknownShare: total ? unknown / total : 0, custScore, regScore, repScore, concScore, score, conf,
+  };
+}
+
+function prioBuild() {
+  const V = new Map();                         // design|color|grp -> variant
+  const vget = (d, c, g) => {
+    const k = d + '|' + c + '|' + g;
+    if (!V.has(k)) V.set(k, { key: k, design: d, color: c, grp: g, events: [], lots: new Map(), pending: 0, stock: 0, setPcs: 0, sr: 0, dl: 0 });
+    return V.get(k);
+  };
+  const ranges = new Map();                    // design|color -> ranges seen anywhere
+  const addRange = (dc, sizes) => {
+    if (!sizes || sizes.length < 2) return;
+    if (!ranges.has(dc)) ranges.set(dc, new Map());
+    ranges.get(dc).set(sizes.join(','), sizes);
+  };
+
+  // deliveries: one event per challan line, split into size groups
+  let start = Infinity, asOf = 0;
+  for (const r of (S.delRows || [])) {
+    const d = stripDes(r['Design Number']); const c = normColor(r['Color']);
+    const sizes = expandSize(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Date']);
+    if (!d || !c || !sizes || !(q > 0) || !t) continue;
+    start = Math.min(start, t); asOf = Math.max(asOf, t);
+    addRange(d + '|' + c, sizes);
+    const per = spread(q, sizes); const by = { S: 0, L: 0 };
+    for (const s of sizes) by[grpOf(s)] += per[s];
+    for (const g of ['S', 'L']) if (by[g] > 0) vget(d, c, g).events.push({
+      t, pcs: by[g], cust: custKey(r['Customer Name']), name: normCust(r['Customer Name']),
+      state: String(r['Customer State'] || '').trim().toLowerCase(), challan: String(r['Delivery Challan Number'] || '').trim(),
+    });
+  }
+  if (!isFinite(start)) return null;
+
+  // purchase lots dated inside the delivery window; anything older folds into the opening lot
+  for (const r of (S.purchRows || [])) {
+    const d = stripDes(r['Design Name Without Prefix'] || r['Design Number']); const c = normColor(r['Color']);
+    const sizes = expandSize(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Purchase Date']);
+    if (!d || !c || !sizes || !(q > 0) || !t || t < start) continue;
+    addRange(d + '|' + c, sizes);
+    const lot = lotId(r['Challan No']) || 'no challan no.';
+    const per = spread(q, sizes); const by = { S: 0, L: 0 };
+    for (const s of sizes) by[grpOf(s)] += per[s];
+    for (const g of ['S', 'L']) if (by[g] > 0) {
+      const v = vget(d, c, g); const lk = lotId(r['Challan No']) ? lot : lot + '@' + t;
+      const L = v.lots.get(lk) || { lot, t, qty: 0 };
+      L.qty += by[g]; L.t = Math.min(L.t, t); v.lots.set(lk, L);
+    }
+  }
+
+  // pending orders
+  for (const ln of (S.lines || [])) {
+    addRange(ln.design + '|' + ln.color, ln.sizes);
+    for (const s of ln.sizes) {
+      const k = ln.design + '|' + ln.color + '|' + grpOf(s);
+      if (V.has(k) || ln.perSize[s] > 0) vget(ln.design, ln.color, grpOf(s)).pending += ln.perSize[s];
+    }
+  }
+
+  // stock as VastraApp reports it, and how much of it makes complete sets
+  const netted = S.netted || (S.stockRows ? netStock(S.stockRows, { stockColumn: 'Current Stock' }).stock : new Map());
+  for (const r of (S.stockRows || [])) addRange(stripDes(r['Design Name']) + '|' + normColor(r['Color Name']), expandSize(r['Size']));
+  for (const v of V.values()) {
+    const b = netted.get(v.design + '|' + v.color) || {};
+    for (const s of Object.keys(b)) if (grpOf(s) === v.grp) v.stock += b[s];
+  }
+  const done = new Set();
+  for (const v of V.values()) {
+    const dc = v.design + '|' + v.color;
+    if (done.has(dc)) continue; done.add(dc);
+    const b = netted.get(dc) || {};
+    const rs = ranges.has(dc) ? [...ranges.get(dc).values()] : [];
+    const cv = carve(b, rs);
+    const setBy = { S: 0, L: 0 };
+    for (const x of cv.sets) { const sz = expandSize(x.size) || []; for (const s of sz) setBy[grpOf(s)] += x.sets; }
+    for (const g of ['S', 'L']) { const w = V.get(dc + '|' + g); if (w) w.setPcs = setBy[g]; }
+  }
+  // returns, from the stock report's own lifetime totals
+  for (const r of (S.stockRows || [])) {
+    const sizes = expandSize(r['Size']); if (!sizes) continue;
+    const sr = Number(r['Sales Return'] || 0), dl = Number(r['Delivered Stock'] || 0);
+    if (!sr && !dl) continue;
+    const d = stripDes(r['Design Name']), c = normColor(r['Color Name']);
+    const ps = spread(sr, sizes), pd = spread(dl, sizes);
+    for (const s of sizes) { const v = V.get(d + '|' + c + '|' + grpOf(s)); if (v) { v.sr += ps[s]; v.dl += pd[s]; } }
+  }
+
+  // per-variant figures
+  const list = [...V.values()].filter(v => v.events.length || v.pending > 0);
+  const r4 = asOf - 28 * DAY, r8 = asOf - 56 * DAY;
+  for (const v of list) {
+    v.events.sort((a, b) => a.t - b.t);
+    v.recent = v.events.filter(e => e.t > r4).reduce((t, e) => t + e.pcs, 0);
+    v.prior = v.events.filter(e => e.t > r8 && e.t <= r4).reduce((t, e) => t + e.pcs, 0);
+    v.weekly8 = (v.recent + v.prior) / 8;
+    v.forecast = 0.6 * v.recent / 4 + 0.4 * v.prior / 4;
+    v.momentum = v.prior ? v.recent / v.prior : (v.recent ? Infinity : 0);
+    v.sold = v.events.reduce((t, e) => t + e.pcs, 0);
+
+    // demand pressure
+    v.dp = v.stock + v.pending > 0 ? 100 * v.pending / (v.stock + v.pending) : 0;
+    v.sDem = v.dp / 20;
+
+    // stock cover: complete sets only, less what pending orders already claim
+    v.saleable = Math.max(0, v.setPcs - v.pending);
+    v.cover = v.forecast > 0 ? v.saleable / v.forecast : null;
+    const w = v.cover;
+    v.sCov = w == null ? 0 : w <= 1 ? 5 : w <= 2 ? 4 : w <= 4 ? 3 : w <= 8 ? 2 : w <= 12 ? 1 : 0;
+
+    // FIFO — an estimate: deliveries are not linked to lots
+    const bought = [...v.lots.values()].reduce((t, l) => t + l.qty, 0);
+    const openRaw = v.stock + v.sold - bought;
+    v.tallyGap = openRaw < 0 ? -openRaw : 0;
+    const lots = [{ lot: 'Before ' + fmtDay(start), t: null, qty: Math.max(0, openRaw), sold: 0, open: true }]
+      .concat([...v.lots.values()].sort((a, b) => a.t - b.t).map(l => ({ lot: l.lot, t: l.t, qty: l.qty, sold: 0 })));
+    let early = 0;
+    for (const e of v.events) {
+      let need = e.pcs;
+      for (const L of lots) {
+        if (need <= 0) break;
+        if (L.t != null && L.t > e.t) continue;
+        const take = Math.min(need, L.qty - L.sold); if (take > 0) { L.sold += take; need -= take; if (L.sold >= L.qty) L.outAt = e.t; }
+      }
+      // sold before its lot was entered (purchase is entered after cutting) — matched to the next lot
+      for (const L of lots) {
+        if (need <= 0) break;
+        const take = Math.min(need, L.qty - L.sold); if (take > 0) { L.sold += take; need -= take; early += take; if (L.sold >= L.qty) L.outAt = e.t; }
+      }
+    }
+    v.early = early;
+    for (const L of lots) {
+      L.left = L.qty - L.sold;
+      L.age = Math.max(0, Math.round((asOf - (L.t == null ? start : L.t)) / DAY));
+      L.st = L.qty ? L.sold / L.qty : 0;
+      if (L.qty > 0 && L.sold >= L.qty && L.outAt != null) {
+        L.days = Math.max(1, Math.round((L.outAt - (L.t == null ? start : L.t)) / DAY));
+        L.ratio = Math.min(1, LOT_TARGET_DAYS / L.days);
+      } else {
+        const expect = Math.min(1, L.age / LOT_TARGET_DAYS);
+        L.ratio = expect > 0 ? Math.min(1, L.st / expect) : (L.st > 0 ? 1 : 0);
+      }
+    }
+    v.lotList = lots.filter(L => L.qty > 0);
+    const dated = v.lotList.filter(L => !L.open);
+    const judged = dated.filter(L => L.age >= 14);
+    const basis = judged.length ? judged : dated.length ? dated : v.lotList;
+    const wq = basis.reduce((t, L) => t + L.qty, 0);
+    v.fifoEstOnly = !dated.length;
+    v.sFifo = wq ? 5 * basis.reduce((t, L) => t + L.ratio * L.qty, 0) / wq : 0;
+    v.sellThrough = v.lotList.reduce((t, L) => t + L.qty, 0) ? v.lotList.reduce((t, L) => t + L.sold, 0) / v.lotList.reduce((t, L) => t + L.qty, 0) : 0;
+
+    // market validation
+    v.mk = marketOf(v.events);
+    v.sMkt = v.mk.score;
+    v.retRate = v.dl > 0 ? v.sr / v.dl : 0;
+  }
+
+  // velocity: recent weekly rate ranked against every other selling variant, plus momentum
+  const rates = list.filter(v => v.weekly8 > 0).map(v => v.weekly8).sort((a, b) => a - b);
+  const n = rates.length;
+  for (const v of list) {
+    if (!(v.weekly8 > 0)) { v.sVel = 0; v.level = 0; continue; }
+    let less = 0, eq = 0; for (const x of rates) { if (x < v.weekly8) less++; else if (x === v.weekly8) eq++; }
+    v.level = (less + (eq + 1) / 2) / n;
+    const mom = v.prior ? clamp01(v.recent / v.prior / 2) : (v.recent ? 1 : 0);
+    v.sVel = 5 * (0.7 * v.level + 0.3 * mom);
+  }
+
+  for (const v of list) {
+    v.score = (v.sVel / 5) * PW.vel + (v.sDem / 5) * PW.dem + (v.sCov / 5) * PW.cov + (v.sFifo / 5) * PW.fifo + (v.sMkt / 5) * PW.mkt;
+    v.cls = prioClassOf(v.score);
+    v.weight = v.pending + v.recent + v.prior;
+    const wr = [];
+    if (!(v.weekly8 > 0) && v.sold) wr.push('no sales in the last 8 weeks');
+    if (v.fifoEstOnly) wr.push('no lot purchased since ' + fmtDay(start) + ' — sell-through is from older stock');
+    if (v.tallyGap > 0) wr.push('purchases exceed stock plus sales by ' + Math.round(v.tallyGap) + ' pcs — check entries');
+    if (v.early > 0) wr.push(Math.round(v.early) + ' pcs sold before their lot was entered');
+    if (v.stock > 0 && v.setPcs === 0) wr.push('only loose pieces in stock — no complete sets');
+    if (v.retRate >= 0.1) wr.push('returns are ' + Math.round(v.retRate * 100) + '% of deliveries');
+    if (v.mk.unknownShare >= 0.3) wr.push('state missing on ' + Math.round(v.mk.unknownShare * 100) + '% of sales');
+    v.warn = wr;
+  }
+
+  // designs: demand-weighted average of their variants
+  const byD = new Map();
+  for (const v of list) { if (!byD.has(v.design)) byD.set(v.design, []); byD.get(v.design).push(v); }
+  const designs = [];
+  for (const [d, vs] of byD) {
+    let ws = vs.map(v => v.weight);
+    if (!ws.some(x => x > 0)) ws = vs.map(v => v.sold);
+    if (!ws.some(x => x > 0)) ws = vs.map(() => 1);
+    const W = ws.reduce((a, b) => a + b, 0);
+    const score = vs.reduce((t, v, i) => t + v.score * ws[i], 0) / W;
+    const mk = marketOf(vs.flatMap(v => v.events));
+    const cls = prioClassOf(score);
+    const flags = [];
+    if ((cls === 'P1' || cls === 'P2') && (mk.conf === 'conc' || mk.conf === 'thin')) flags.push('Trial repeat only — ' + C_LABEL[mk.conf].toLowerCase());
+    const weak = vs.filter((v, i) => ws[i] / W >= 0.15 && v.cls === 'P4');
+    if ((cls === 'P1' || cls === 'P2') && weak.length) flags.push('Weak: ' + weak.map(v => title(v.color) + ' ' + GRP[v.grp]).join(', '));
+    vs.forEach((v, i) => { v.share = ws[i] / W; });
+    designs.push({
+      design: d, score, cls, mk, flags, variants: vs.sort((a, b) => b.score - a.score),
+      sold8: vs.reduce((t, v) => t + v.recent + v.prior, 0), pending: vs.reduce((t, v) => t + v.pending, 0),
+      stock: vs.reduce((t, v) => t + v.stock, 0), colors: [...new Set(vs.map(v => v.color))],
+    });
+  }
+  designs.sort((a, b) => b.score - a.score || a.design.localeCompare(b.design, undefined, { numeric: true }));
+  designs.forEach((x, i) => { x.rank = i + 1; });
+  return { start, asOf, designs, variants: list };
+}
+
+/* rebuilt only when the data underneath changes */
+function prioData() {
+  const key = [S.delRows, S.purchRows, S.stockRows, S.lines, S.netted];
+  if (S.prioCache && S.prioCache.key.every((x, i) => x === key[i])) return S.prioCache.res;
+  const res = prioBuild();
+  S.prioCache = { key, res };
+  return res;
+}
+
+const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
+function sbar(s) { return '<i class="sb5"><i style="width:' + Math.round(clamp01(s / 5) * 100) + '%"></i></i>'; }
+
+function prioVariant(v) {
+  const mom = v.prior ? Math.round((v.recent / v.prior - 1) * 100) : null;
+  const momTxt = v.recent + v.prior === 0 ? 'no sales in 8 weeks'
+    : mom == null ? 'new this month' : (mom >= 0 ? '↑ ' : '↓ ') + Math.abs(mom) + '% vs prior 4 wks';
+  const cell = (name, s, w, detail) =>
+    '<div class="pc5"><span>' + name + ' <small>' + w + '%</small></span><b>' + f1(s) + '</b>' + sbar(s) + '<small>' + detail + '</small></div>';
+  let h = '<div class="pv">' +
+    '<div class="pv-h"><b>' + esc(title(v.color)) + ' · ' + GRP[v.grp] + '</b>' +
+    '<span class="pcls ' + v.cls.toLowerCase() + '">' + v.cls + ' · ' + Math.round(v.score) + '</span>' +
+    '<span class="pconf c-' + v.mk.conf + '">' + C_LABEL[v.mk.conf] + '</span>' +
+    '<span class="pv-sh">' + Math.round(v.share * 100) + '% of design demand</span></div>' +
+    '<div class="pv-g">' +
+    cell('Velocity', v.sVel, PW.vel, f1(v.weekly8) + ' pcs/wk · ' + momTxt) +
+    cell('Demand', v.sDem, PW.dem, Math.round(v.dp) + '% · ' + Math.round(v.pending) + ' pending / ' + Math.round(v.stock) + ' in stock') +
+    cell('Cover', v.sCov, PW.cov, v.cover == null ? 'no recent sales to cover' : f1(v.cover) + ' wks · ' + Math.round(v.saleable) + ' pcs free in full sets') +
+    cell('FIFO', v.sFifo, PW.fifo, Math.round(v.sellThrough * 100) + '% sold through · estimate') +
+    cell('Market', v.sMkt, PW.mkt, v.mk.customers + ' customers · ' + (v.mk.regions.join(', ') || 'no state') +
+      ' · ' + Math.round(v.mk.repRate * 100) + '% repeat · top ' + Math.round(v.mk.topShare * 100) + '%') +
+    '</div>';
+  if (v.warn.length) h += '<div class="pv-w">' + v.warn.map(w => '<span>' + esc(w) + '</span>').join('') + '</div>';
+  if (v.lotList.length) {
+    h += '<div class="pl"><div class="pl-r pl-hd"><span>Lot (FIFO estimate)</span><span>Qty</span><span>Sold</span><span>Left</span><span>Sold %</span><span>Age</span></div>' +
+      v.lotList.map(L => '<div class="pl-r' + (L.open ? ' pl-open' : '') + '"><span>' + esc(L.lot) + (L.t ? ' <small>' + fmtDay(L.t) + '</small>' : '') + '</span>' +
+        '<span>' + Math.round(L.qty) + '</span><span>' + Math.round(L.sold) + '</span><span>' + Math.round(L.left) + '</span>' +
+        '<span>' + Math.round(L.st * 100) + '%</span><span>' + (L.days != null ? 'out in ' + L.days + 'd' : L.age + 'd') + '</span></div>').join('') + '</div>';
+  }
+  return h + '</div>';
+}
+
+function renderPrio() {
+  const body = $('#prio-body');
+  if (!body) return;
+  document.querySelectorAll('[data-pclass]').forEach(b => b.classList.toggle('on', b.dataset.pclass === (S.prioClass || 'all')));
+  if (!S.delRows || !S.delRows.length) {
+    body.innerHTML = '<div class="empty">Paste the VastraApp delivery challan export into a tab called “' + esc(DEL_TAB) +
+      '” in your pending-order sheet, or load the file above. Stock, purchase inward and pending orders are used too.</div>';
+    return;
+  }
+  if (!S.stockRows) { body.innerHTML = '<div class="empty">Load the stock file as well — stock cover and FIFO need it.</div>'; return; }
+  const R = prioData();
+  if (!R) { body.innerHTML = '<div class="empty">No usable delivery lines were found.</div>'; return; }
+
+  const q = (S.q.prio || '').trim().toLowerCase();
+  const cls = S.prioClass || 'all';
+  const counts = { P1: 0, P2: 0, P3: 0, P4: 0 };
+  for (const d of R.designs) counts[d.cls]++;
+  const shown = R.designs.filter(d => (cls === 'all' || d.cls === cls) &&
+    hits(q, d.design, d.colors.join(' '), d.variants.flatMap(v => v.events.map(e => e.name)).join(' ')));
+
+  ['all', 'P1', 'P2', 'P3', 'P4'].forEach(k => {
+    const b = document.querySelector('[data-pclass="' + k + '"]');
+    if (b) b.textContent = (k === 'all' ? 'All ' + R.designs.length : k + ' · ' + counts[k]);
+  });
+
+  let h = '<p class="exp">Sales from ' + fmtDay(R.start) + ' to ' + fmtDay(R.asOf) + '. Every design is scored per colour and size group (0–3 / 4+), ' +
+    'then averaged by demand. Lot figures are FIFO estimates — deliveries are not linked to lots. ' +
+    'This ranks designs for attention; it does not set repeat quantities.</p>';
+  if (!S.purchRows) h += '<div class="note">No purchase inward file loaded, so every lot counts as older stock and FIFO scores are rough.</div>';
+  if (!shown.length) h += '<div class="empty">Nothing matches.</div>';
+
+  for (const d of shown) {
+    const open = S.openPrio.has(d.design);
+    h += '<div class="pp' + (open ? ' open' : '') + '" data-prio="' + esc(d.design) + '">' +
+      '<div class="pp-h"><span class="pp-r">#' + d.rank + '</span><b>DES-' + esc(d.design) + '</b>' +
+      '<span class="pcls ' + d.cls.toLowerCase() + '">' + d.cls + '</span>' +
+      '<span class="pconf c-' + d.mk.conf + '">' + C_LABEL[d.mk.conf] + '</span>' +
+      '<span class="pp-s">' + Math.round(d.score) + '</span></div>' +
+      '<div class="pp-m">' + Math.round(d.sold8) + ' pcs sold in 8 wks · ' + Math.round(d.pending) + ' pending · ' +
+      Math.round(d.stock) + ' in stock · ' + d.mk.customers + ' customers · ' + d.variants.length + ' variant' + (d.variants.length === 1 ? '' : 's') + '</div>' +
+      (d.flags.length ? '<div class="pp-f">' + d.flags.map(f => '<span>' + esc(f) + '</span>').join('') + '</div>' : '');
+    if (open) h += '<div class="pp-d">' + d.variants.map(prioVariant).join('') + '</div>';
+    h += '</div>';
+  }
+  body.innerHTML = h;
+}
+
+/* ---------- parties drawer ---------- */
+function renderParties() {
+  const keys = Object.keys(S.names).sort((a, b) => S.names[a].localeCompare(S.names[b]));
+  const counts = {};
+  for (const ln of S.lines) counts[ln.ckey] = (counts[ln.ckey] || 0) + ln.qty;
+  const unset = keys.filter(k => !S.cats[k]).length;
+  $('#partyCount').textContent = keys.length ? keys.length + ' parties' + (unset ? ', ' + unset + ' unset' : '') : '';
+
+  let h = '<p class="exp">W1 and W2 draw first. Blank parties fall to the category chosen above. ' +
+    '“Whole order only” releases an allotment unless it covers the full line.</p>' +
+    '<div class="bar"><label class="inline">Set all blank to <select id="bulkCat">' +
+    CATS.map(c => '<option>' + c + '</option>').join('') + '</select></label>' +
+    '<button id="bulkGo">Apply</button><button id="saveCats">Save list</button><button id="loadCats">Load list</button></div>' +
+    '<div class="tw vscroll" style="max-height:340px;overflow:auto"><table><thead><tr><th>Party</th><th class="n">Pending</th><th>Category</th><th>Whole order only</th></tr></thead><tbody>';
+  for (const k of keys) {
+    h += '<tr><td>' + esc(S.names[k]) + '</td><td class="n">' + (counts[k] || 0) + '</td>' +
+      '<td><select data-cat="' + esc(k) + '"><option value="">—</option>' +
+      CATS.map(c => '<option' + (S.cats[k] === c ? ' selected' : '') + '>' + c + '</option>').join('') + '</select></td>' +
+      '<td><input type="checkbox" data-full="' + esc(k) + '"' + (S.fullOnly[k] ? ' checked' : '') +
+      ' aria-label="Whole order only for ' + esc(S.names[k]) + '"></td></tr>';
+  }
+  $('#parties').innerHTML = h + '</tbody></table></div>';
+
+  $('#parties').querySelectorAll('[data-cat]').forEach(el => el.addEventListener('change', e => {
+    S.cats[e.target.dataset.cat] = e.target.value; saveParties(); rebuild();
+  }));
+  $('#parties').querySelectorAll('[data-full]').forEach(el => el.addEventListener('change', e => {
+    S.fullOnly[e.target.dataset.full] = e.target.checked; saveParties(); rebuild();
+  }));
+  $('#bulkGo').addEventListener('click', () => {
+    const v = $('#bulkCat').value;
+    for (const k of keys) if (!S.cats[k]) S.cats[k] = v;
+    saveParties(); rebuild();
+  });
+  $('#saveCats').addEventListener('click', () => {
+    const o = {};
+    for (const k of Object.keys(S.names)) o[k] = { cat: S.cats[k] || '', full: !!S.fullOnly[k], name: S.names[k] };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(o, null, 2)], { type: 'application/json' }));
+    a.download = 'party-categories.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  $('#loadCats').addEventListener('click', () => $('#fCats').click());
+}
+
+$('#fCats').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const o = JSON.parse(ev.target.result);
+      for (const k of Object.keys(o)) { S.cats[k] = o[k].cat; S.fullOnly[k] = !!o[k].full; if (!S.names[k]) S.names[k] = o[k].name || k; }
+      saveParties(); rebuild();
+    } catch (err) { msg('That file is not a saved party list.', 'bad'); }
+  };
+  r.readAsText(f);
+});
+
+/* ---------- export ---------- */
+$('#exportBtn').addEventListener('click', async () => {
+  try { await xlsxReady; } catch (e) { return msg('Export needs the Excel reader, which could not load. Check the connection and try again.', 'bad'); }
+  const wb = XLSX.utils.book_new();
+  const dw = designWiseRows().map(r => ({
+    'Design Name': 'DES-' + r.design, 'Color': title(r.color), 'Size': r.size,
+    'Pending Qty.': r.qty, 'Allotted': r.allotted, 'Short': r.qty - r.allotted,
+  }));
+  const cw = [];
+  for (const r of S.allocRows) cw.push({
+    'Customer Name': r.customer, 'Category': r.category, 'Design Name': 'DES-' + r.design,
+    'Color': title(r.color), 'Size': r.size, 'Pending Qty.': r.ordered,
+    'Allotted': r.allocated, 'Balance': r.balance,
+    'Allot Sizes': r.ranges.map(x => x.size + ' x ' + x.pieces).join(', '),
+    'Ready Date': (function(){ const t = SetTracker.lookup(r.design, r.size); return t.state === 'dated' ? t.date : (t.state === 'done' ? 'complete' : ''); })(),
+    'In Production': (Lots.arriving(r.design, r.color, String(expandSize(r.size) ? expandSize(r.size)[0] : '')).reduce((t, x) => t + x.pieces, 0) || ''),
+    'Lot': (SetTracker.lookup(r.design, r.size).label || ''),
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dw), 'Design Wise Pending');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cw), 'Customer Wise Pending');
+  const ma = [];
+  if (S.stockRows) for (const [, g] of allotGroups()) for (const l of g.lines) if (l.sets) ma.push({
+    'Customer Name': l.customer, 'Category': l.cat, 'Design Name': 'DES-' + g.design,
+    'Color': title(g.color), 'Size': l.size, 'Ordered Sets': l.orderedSets,
+    'Allotted Sets': l.sets, 'Allotted Pcs': l.sets * l.per,
+  });
+  if (ma.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ma), 'Allotment');
+  const PR = S.delRows && S.stockRows ? prioData() : null;
+  if (PR) {
+    const pr = [];
+    for (const d of PR.designs) for (const v of d.variants) pr.push({
+      'Rank': d.rank, 'Design Name': 'DES-' + d.design, 'Design Score': Math.round(d.score), 'Design Class': d.cls,
+      'Market Confidence': C_LABEL[d.mk.conf], 'Colour': title(v.color), 'Size Group': GRP[v.grp],
+      'Variant Score': Math.round(v.score), 'Variant Class': v.cls,
+      'Velocity /5': +f1(v.sVel), 'Demand /5': +f1(v.sDem), 'Cover /5': +f1(v.sCov), 'FIFO /5': +f1(v.sFifo), 'Market /5': +f1(v.sMkt),
+      'Sold 8 wks (pcs)': Math.round(v.recent + v.prior), 'Pending (pcs)': Math.round(v.pending), 'Stock (pcs)': Math.round(v.stock),
+      'Cover (wks)': v.cover == null ? '' : +f1(v.cover), 'Customers': v.mk.customers, 'Top customer %': Math.round(v.mk.topShare * 100),
+      'Flags': d.flags.join('; '), 'Warnings': v.warn.join('; '),
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pr), 'Production Priority');
+  }
+  XLSX.writeFile(wb, 'Pending-Allotment-' + new Date().toISOString().slice(0, 10) + '.xlsx');
+});
+
+/* ---------- chrome ---------- */
+document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('section.panel').forEach(p => p.classList.toggle('show', p.id === 'p-' + b.dataset.p));
+}));
+$('#togParties').addEventListener('click', () => {
+  const d = $('#partyWrap');
+  const open = d.hasAttribute('hidden');
+  open ? d.removeAttribute('hidden') : d.setAttribute('hidden', '');
+  $('#togParties').setAttribute('aria-expanded', open);
+});
+/* ---------- sheet sources panel ---------- */
+function orderCheckLine() {
+  const c = S.meta.orderCheck;
+  if (!c) return '';
+  const notes = c.notes.length
+    ? c.notes.map(n => esc(n.col) + ' (' + n.filled + ' filled)').join(', ')
+    : '<b>none</b> — the orders tab has no column with “note” in its name';
+  return '<p class="hintline">Orders received: ' + c.rows + ' lines, ' + c.cols + ' columns. Note columns: ' + notes + '.</p>';
+}
+
+function renderSources() {
+  $('#sources').innerHTML =
+    '<p class="exp">Paste the link to each tab of your pending-order sheet. The app pulls from them on open, so you never upload a file again. ' +
+    'File pickers above still work and override whatever was pulled.</p>' +
+    '<label class="fld"><span>Pending orders tab</span>' +
+    '<input type="text" id="srcOrders" placeholder="https://docs.google.com/spreadsheets/d/…#gid=…" value="' + esc(S.src.orders) + '"></label>' +
+    '<label class="fld"><span>Purchase inward tab</span>' +
+    '<input type="text" id="srcPurch" placeholder="paste the purchase tab link, or leave blank and upload" value="' + esc(S.src.purchase) + '"></label>' +
+    '<label class="fld"><span>Stock tab</span>' +
+    '<input type="text" id="srcStock" placeholder="' + (Sheets.byName(S.src.orders, STOCK_TAB)
+      ? 'leave blank — stock comes from the “' + esc(STOCK_TAB) + '” tab automatically'
+      : 'paste the stock tab link, or leave blank and upload the file') + '" value="' + esc(S.src.stock) + '"></label>' +
+    (Sheets.byName(S.src.orders, STOCK_TAB) && !S.src.stock
+      ? '<p class="hintline">Stock: reading the “' + esc(STOCK_TAB) + '” tab of the same sheet. Paste VastraApp’s stock there; the app picks it up when you come back to it, and every two minutes while it is open.</p>'
+      : '') +
+    orderCheckLine() +
+    '<div class="bar"><button id="saveSrc" class="primary">Save and pull</button>' +
+    '<span class="hintline">' + (S.src.orders || S.src.stock || S.src.purchase
+      ? 'Saved links: ' + ['orders', 'stock', 'purchase'].filter(k => S.src[k]).join(', ')
+      : 'No links saved yet — paste and press Save and pull.') + '</span></div>' +
+    '<div class="bar">' +
+    '<span class="hintline">If the sheet is private, use File → Share → Publish to web → pick the tab → CSV, and paste that link instead.</span></div>';
+  $('#saveSrc').addEventListener('click', async () => {
+    S.src.orders = $('#srcOrders').value.trim();
+    S.src.stock = $('#srcStock').value.trim();
+    S.src.purchase = $('#srcPurch').value.trim();
+    saveParties();
+    await Sheets.pullAll(false);
+  });
+}
+$('#togSources').addEventListener('click', () => {
+  const d = $('#sourceWrap');
+  const open = d.hasAttribute('hidden');
+  open ? d.removeAttribute('hidden') : d.setAttribute('hidden', '');
+  $('#togSources').setAttribute('aria-expanded', open);
+  renderSources();
+});
+$('#refresh').addEventListener('click', () => Sheets.pullAll(false));
+
+let qTimer;
+function wireSearch(inputId, clearId, key, render) {
+  const el = $('#' + inputId);
+  el.addEventListener('input', () => {
+    S.q[key] = el.value;
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => {
+      render();
+      const box = el.getBoundingClientRect();
+      if (box.top < 0) el.scrollIntoView({ block: 'start' });
+    }, 140);   // 500 rows redraw, so wait for a pause
+  });
+  $('#' + clearId).addEventListener('click', () => {
+    el.value = ''; S.q[key] = ''; el.focus(); render();
+  });
+}
+wireSearch('qCust', 'clrCust', 'cust', renderCustomer);
+wireSearch('qDesign', 'clrDesign', 'design', renderDesign);
+wireSearch('qAllot', 'clrAllot', 'allot', renderAllot);
+wireSearch('qProd', 'clrProd', 'prod', renderProduction);
+wireSearch('qPrio', 'clrPrio', 'prio', renderPrio);
+$('#fJobs').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadJobFile(f); e.target.value = ''; });
+
+$('#ageDays').addEventListener('change', rebuild);
+$('#clrManual').addEventListener('click', () => {
+  if (!confirm('Clear every manual allotment? This cannot be undone.')) return;
+  Manual.sets = {}; Manual.save(); renderAllot();
+});
+$('#mode').addEventListener('change', rebuild);
+$('#defCat').addEventListener('change', rebuild);
+$('#clear').addEventListener('click', () => {
+  if (!confirm('Clear the loaded files? Party categories are kept.')) return;
+  S.orderRows = S.stockRows = S.purchRows = S.jobRows = S.delRows = null; S.lines = []; S.allocRows = [];
+  S.track = null; SetTracker.raw = null; SetTracker.index = null;
+  S.meta = { orders: '', stock: '', track: '', when: '' };
+  store.set('allot.data', null);
+  $('#exportBtn').disabled = true;
+  msg(''); rebuild();
+});
+
+Manual.load();
+restore();
+Sheets.seed();
+Live.chip('wait', 'connecting');
+firebaseReady.then(() => Live.start(), () => Live.chip('', 'offline board'));
+Sheets.pullAll(false);
+Sheets.watch();
+
+</script>
+</body>
+</html>
