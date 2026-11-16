@@ -227,6 +227,8 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
 .pv-w{display:flex;flex-direction:column;gap:3px;margin-top:7px}
 .pv-w span{font-size:12px;color:var(--amber)}
 .pv-w span::before{content:'⚠ '}
+.pv-sf{font-size:12px;color:var(--ink-2);margin-top:7px}
+.pl-cut{color:var(--amber)}
 .pl{margin-top:8px;font-size:12px}
 .pl-r{display:grid;grid-template-columns:minmax(0,2.2fr) repeat(5,minmax(0,1fr));gap:4px;padding:4px 0;border-bottom:1px dashed var(--rule-2)}
 .pl-r span:not(:first-child){text-align:right}
@@ -265,8 +267,8 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
 
 <header class="top">
   <h1>Pending &amp; Allotment</h1>
-  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v9.1 TEST</span>
-  <span class="chip" id="build">build 9.1</span>
+  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v9.2 TEST</span>
+  <span class="chip" id="build">build 9.2</span>
   <span class="chip" id="chip" title="Set Tracker connection">local</span>
 </header>
 <p class="sub-t">Your two pending reports, with stock already allotted against them.</p>
@@ -2551,6 +2553,21 @@ function carve(counts, ranges) {
   return { sets: out, loose: loose.map(s => ({ size: s, pcs: left[s] })) };
 }
 
+/* A range VastraApp shows below zero was cut out of a wider set, so the rest of
+   that set is a set of its own: 0-3 out of a 0-8 leaves a 4-8. Those leftover
+   ranges are added so the shelf reads 1 × 4-8, not five loose pieces. */
+function withComplements(ranges, negatives) {
+  const out = ranges.slice();
+  const seen = new Set(out.map(r => r.join(',')));
+  for (const n of negatives) for (const w of ranges) {
+    if (w.length <= n.length || !n.every(s => w.includes(s))) continue;
+    const rest = w.filter(s => !n.includes(s));
+    const joined = rest.every((s, i) => i === 0 || s === rest[i - 1] + 1);
+    if (rest.length && joined && !seen.has(rest.join(','))) { seen.add(rest.join(',')); out.push(rest); }
+  }
+  return out;
+}
+
 function carveText(c) {
   const parts = c.sets.map(x => x.sets + ' × ' + esc(x.size));
   if (c.loose.length) parts.push(c.loose.map(x => x.pcs + ' loose in ' + esc(x.size)).join(', '));
@@ -2608,8 +2625,9 @@ function rangesFor(g) {
   for (const l of g.lines) add(l.sizes);
   // every range VastraApp lists, negative ones included: a negative 0-5 leaves
   // 6-10 halves behind, and those are sets in their own right
-  for (const e of ledgerFor(g.design, g.color)) { const s = expandSize(e.size); if (s) add(s); }
-  return out;
+  const negs = [];
+  for (const e of ledgerFor(g.design, g.color)) { const s = expandSize(e.size); if (s) { add(s); if (e.q < 0) negs.push(s); } }
+  return withComplements(out, negs);
 }
 
 function stockChips(g) {
@@ -2883,22 +2901,131 @@ function prioBuild() {
   }
 
   // stock, sales return and delivered — the stock report's own figures per range
-  const negs = new Map();                      // design|color -> ranges VastraApp shows below zero
+  const C = new Map();                         // design|color -> ranges recorded anywhere, and the ones below zero
+  const cget = dc => { if (!C.has(dc)) C.set(dc, { ranges: new Map(), negs: [] }); return C.get(dc); };
+  for (const v of V.values()) cget(v.design + '|' + v.color).ranges.set(v.grp, expandSize(v.grp));
   for (const r of (S.stockRows || [])) {
-    const g = rangeOf(r['Size']); if (!g) continue;
+    const sz = expandSize(r['Size']); if (!sz) continue;
+    const g = rangeLabel(sz);
     const d = stripDes(r['Design Name']), c = normColor(r['Color Name']);
     const cur = Number(r['Current Stock'] || 0);
-    const k = d + '|' + c + '|' + g;
-    if (cur < 0) { const dc = d + '|' + c; if (!negs.has(dc)) negs.set(dc, []); negs.get(dc).push({ g, sizes: expandSize(r['Size']), cur }); }
-    const v = V.get(k); if (!v) continue;
+    const cc = cget(d + '|' + c); cc.ranges.set(g, sz);
+    if (cur < 0) cc.negs.push(sz);
+    const v = V.get(d + '|' + c + '|' + g); if (!v) continue;
     v.stockRaw += cur;
     v.sr += Number(r['Sales Return'] || 0); v.dl += Number(r['Delivered Stock'] || 0);
   }
+
+  // what is really on the shelf: VastraApp's ranges netted size by size, then read back as the
+  // most complete sets they make — so a 0-3 cut out of a 0-8 leaves a 4-8 set, not a 0-8 one
+  const netted = S.netted || (S.stockRows ? netStock(S.stockRows, { stockColumn: 'Current Stock' }).stock : new Map());
+  const rawBySize = new Map();                 // sizes VastraApp is short of overall, after netting every range
+  for (const r of (S.stockRows || [])) {
+    const sz = expandSize(r['Size']); if (!sz) continue;
+    const dc = stripDes(r['Design Name']) + '|' + normColor(r['Color Name']);
+    if (!rawBySize.has(dc)) rawBySize.set(dc, {});
+    const b = rawBySize.get(dc), per = spread(Number(r['Current Stock'] || 0), sz);
+    for (const x of sz) b[x] = (b[x] || 0) + per[x];
+  }
+  for (const [dc, cc] of C) {
+    const short = Object.keys(rawBySize.get(dc) || {}).map(Number).filter(x => rawBySize.get(dc)[x] < -0.01).sort((a, b) => a - b);
+    cc.short = !short.length ? '' : short.every((x, i) => i === 0 || x === short[i - 1] + 1) ? rangeLabel(short) : short.join(', ');
+    const rs = withComplements([...cc.ranges.values()], cc.negs);
+    cc.shelf = carve(netted.get(dc) || {}, rs);
+    cc.shelfPcs = cc.shelf.sets.reduce((t, x) => t + x.pcs, 0) + cc.shelf.loose.reduce((t, x) => t + x.pcs, 0);
+  }
   for (const v of V.values()) {
-    v.stock = Math.max(0, v.stockRaw);
-    v.setPcs = v.stock;
+    const cc = C.get(v.design + '|' + v.color);
     const sz = expandSize(v.grp) || [];
-    v.brokenBy = (negs.get(v.design + '|' + v.color) || []).filter(n => n.g !== v.grp && n.sizes.every(s => sz.includes(s)));
+    const own = cc.shelf.sets.find(x => x.size === v.grp);
+    v.stock = own ? own.pcs : 0;                               // complete sets of exactly this range
+    v.wider = cc.shelf.sets.filter(x => { const w = expandSize(x.size) || []; return w.length > sz.length && sz.every(s => w.includes(s)); })
+      .map(x => ({ size: x.size, sets: x.sets, pcs: x.sets * sz.length }));
+    v.inWider = v.wider.reduce((t, x) => t + x.pcs, 0);       // this range's pieces sitting inside wider sets
+    v.avail = v.stock + v.inWider;
+    v.shelf = cc.shelf; v.shelfPcs = cc.shelfPcs; v.short = cc.short;
+  }
+
+  // FIFO — an estimate: deliveries are not linked to lots. Worked colour by colour, oldest
+  // lot first. A sale that its own range's lots cannot cover was cut out of a wider set, so it
+  // is taken from the wider range's lots — 4 pcs of a 0-8 lot for a 0-3, leaving its 4-8 behind.
+  const lotAge = L => Math.max(0, Math.round((asOf - (L.t == null ? start : L.t)) / DAY));
+  const byColour = new Map();
+  for (const v of V.values()) { const dc = v.design + '|' + v.color; if (!byColour.has(dc)) byColour.set(dc, []); byColour.get(dc).push(v); }
+  for (const [, vs] of byColour) {
+    for (const v of vs) {
+      v.sold = v.events.reduce((t, e) => t + e.pcs, 0);
+      const bought = [...v.lots.values()].reduce((t, l) => t + l.qty, 0);
+      const openRaw = v.stockRaw + v.sold - bought;
+      v.tallyGap = Math.max(0, bought - v.sold - Math.max(0, v.stockRaw));
+      v.sizes = expandSize(v.grp) || [];
+      v.allLots = [{ lot: 'Before ' + fmtDay(start), t: null, qty: Math.max(0, openRaw), sold: 0, cut: 0, open: true, range: v.grp }]
+        .concat([...v.lots.values()].sort((a, b) => a.t - b.t).map(l => ({ lot: l.lot, t: l.t, qty: l.qty, sold: 0, cut: 0, range: v.grp })));
+      v.early = 0; v.over = 0; v.cutFrom = new Map(); v.cutFor = new Map();
+      v.preCut = Math.max(0, -openRaw);
+    }
+    // a range already below zero before the window was cut out of wider sets back then,
+    // so those wider sets were not on the shelf at the start either
+    for (const v of vs) {
+      let need = v.preCut;
+      const wide = vs.filter(w => w.sizes.length > v.sizes.length && v.sizes.every(s => w.sizes.includes(s)))
+        .sort((a, b) => a.sizes.length - b.sizes.length);
+      for (const w of wide) {
+        if (need <= 0) break;
+        const L = w.allLots[0]; const take = Math.min(need, L.qty);
+        L.qty -= take; need -= take;
+      }
+    }
+    const evs = vs.flatMap(v => v.events.map(e => ({ e, v }))).sort((a, b) => a.e.t - b.e.t);
+    for (const { e, v } of evs) {
+      let need = e.pcs;
+      const draw = (lots, onlyDated, cb) => {
+        for (const L of lots) {
+          if (need <= 0) break;
+          if (onlyDated && L.t != null && L.t > e.t) continue;
+          const take = Math.min(need, L.qty - L.sold);
+          if (take > 0) { L.sold += take; need -= take; if (L.sold >= L.qty) L.outAt = e.t; cb(L, take); }
+        }
+      };
+      draw(v.allLots, true, () => {});
+      draw(v.allLots, false, (L, n) => { v.early += n; });     // sold before its lot was entered
+      if (need > 0) {
+        const wide = vs.filter(w => w.sizes.length > v.sizes.length && v.sizes.every(s => w.sizes.includes(s)))
+          .sort((a, b) => a.sizes.length - b.sizes.length);
+        const wl = wide.flatMap(w => w.allLots.map(L => ({ L, w }))).sort((a, b) => (a.L.t == null ? -1 : a.L.t) - (b.L.t == null ? -1 : b.L.t));
+        const note = (L, n) => {
+          L.cut += n;
+          const w = wl.find(x => x.L === L).w;
+          v.cutFrom.set(w.grp, (v.cutFrom.get(w.grp) || 0) + n);
+          w.cutFor.set(v.grp, (w.cutFor.get(v.grp) || 0) + n);
+        };
+        draw(wl.map(x => x.L), true, note);
+        draw(wl.map(x => x.L), false, note);
+      }
+      v.over += Math.max(0, need);
+    }
+    for (const v of vs) for (const L of v.allLots) {
+      L.left = L.qty - L.sold;
+      L.age = lotAge(L);
+      L.st = L.qty ? L.sold / L.qty : 0;
+      if (L.qty > 0 && L.sold >= L.qty && L.outAt != null) {
+        L.days = Math.max(1, Math.round((L.outAt - (L.t == null ? start : L.t)) / DAY));
+        L.ratio = Math.min(1, LOT_TARGET_DAYS / L.days);
+      } else {
+        const expect = Math.min(1, L.age / LOT_TARGET_DAYS);
+        L.ratio = expect > 0 ? Math.min(1, L.st / expect) : (L.st > 0 ? 1 : 0);
+      }
+    }
+    // a range with no lots of its own is judged on the wider lots it was cut from
+    for (const v of vs) {
+      v.lotList = v.allLots.filter(L => L.qty > 0);
+      v.lotsFrom = null;
+      if (!v.lotList.length && v.cutFrom.size) {
+        const src = vs.filter(w => v.cutFrom.has(w.grp));
+        v.lotList = src.flatMap(w => w.allLots.filter(L => L.qty > 0));
+        v.lotsFrom = src.map(w => w.grp).join(', ');
+      }
+    }
   }
 
   // per-variant figures
@@ -2911,61 +3038,25 @@ function prioBuild() {
     v.weekly8 = (v.recent + v.prior) / 8;
     v.forecast = 0.6 * v.recent / 4 + 0.4 * v.prior / 4;
     v.momentum = v.prior ? v.recent / v.prior : (v.recent ? Infinity : 0);
-    v.sold = v.events.reduce((t, e) => t + e.pcs, 0);
 
-    // demand pressure
-    v.dp = v.stock + v.pending > 0 ? 100 * v.pending / (v.stock + v.pending) : 0;
+    // demand pressure — stock counts this range's own sets and its pieces inside wider sets
+    v.dp = v.avail + v.pending > 0 ? 100 * v.pending / (v.avail + v.pending) : 0;
     v.sDem = v.dp / 20;
 
     // stock cover: complete sets only, less what pending orders already claim
-    v.saleable = Math.max(0, v.stock - v.pending);
+    v.saleable = Math.max(0, v.avail - v.pending);
     v.cover = v.forecast > 0 ? v.saleable / v.forecast : null;
     const w = v.cover;
     v.sCov = w == null ? 0 : w <= 1 ? 5 : w <= 2 ? 4 : w <= 4 ? 3 : w <= 8 ? 2 : w <= 12 ? 1 : 0;
 
-    // FIFO — an estimate: deliveries are not linked to lots
-    const bought = [...v.lots.values()].reduce((t, l) => t + l.qty, 0);
-    const openRaw = v.stockRaw + v.sold - bought;
-    // a range below zero in VastraApp was sold out of wider sets — that is not a purchase mismatch
-    v.tallyGap = Math.max(0, bought - v.sold - Math.max(0, v.stockRaw));
-    const lots = [{ lot: 'Before ' + fmtDay(start), t: null, qty: Math.max(0, openRaw), sold: 0, open: true }]
-      .concat([...v.lots.values()].sort((a, b) => a.t - b.t).map(l => ({ lot: l.lot, t: l.t, qty: l.qty, sold: 0 })));
-    let early = 0, over = 0;
-    for (const e of v.events) {
-      let need = e.pcs;
-      for (const L of lots) {
-        if (need <= 0) break;
-        if (L.t != null && L.t > e.t) continue;
-        const take = Math.min(need, L.qty - L.sold); if (take > 0) { L.sold += take; need -= take; if (L.sold >= L.qty) L.outAt = e.t; }
-      }
-      // sold before its lot was entered (purchase is entered after cutting) — matched to the next lot
-      for (const L of lots) {
-        if (need <= 0) break;
-        const take = Math.min(need, L.qty - L.sold); if (take > 0) { L.sold += take; need -= take; early += take; if (L.sold >= L.qty) L.outAt = e.t; }
-      }
-      over += Math.max(0, need);
-    }
-    v.early = early; v.over = over;
-    for (const L of lots) {
-      L.left = L.qty - L.sold;
-      L.age = Math.max(0, Math.round((asOf - (L.t == null ? start : L.t)) / DAY));
-      L.st = L.qty ? L.sold / L.qty : 0;
-      if (L.qty > 0 && L.sold >= L.qty && L.outAt != null) {
-        L.days = Math.max(1, Math.round((L.outAt - (L.t == null ? start : L.t)) / DAY));
-        L.ratio = Math.min(1, LOT_TARGET_DAYS / L.days);
-      } else {
-        const expect = Math.min(1, L.age / LOT_TARGET_DAYS);
-        L.ratio = expect > 0 ? Math.min(1, L.st / expect) : (L.st > 0 ? 1 : 0);
-      }
-    }
-    v.lotList = lots.filter(L => L.qty > 0);
     const dated = v.lotList.filter(L => !L.open);
     const judged = dated.filter(L => L.age >= 14);
     const basis = judged.length ? judged : dated.length ? dated : v.lotList;
     const wq = basis.reduce((t, L) => t + L.qty, 0);
     v.fifoEstOnly = !dated.length;
     v.sFifo = wq ? 5 * basis.reduce((t, L) => t + L.ratio * L.qty, 0) / wq : 0;
-    v.sellThrough = v.lotList.reduce((t, L) => t + L.qty, 0) ? v.lotList.reduce((t, L) => t + L.sold, 0) / v.lotList.reduce((t, L) => t + L.qty, 0) : 0;
+    const lq = v.lotList.reduce((t, L) => t + L.qty, 0);
+    v.sellThrough = lq ? v.lotList.reduce((t, L) => t + L.sold, 0) / lq : 0;
 
     // market validation
     v.mk = marketOf(v.events);
@@ -2990,13 +3081,13 @@ function prioBuild() {
     v.weight = v.pending + v.recent + v.prior;
     const wr = [];
     if (!(v.weekly8 > 0) && v.sold) wr.push('no sales in the last 8 weeks');
-    if (v.fifoEstOnly && !(v.stockRaw < 0)) wr.push('no lot purchased since ' + fmtDay(start) + ' — sell-through is from older stock');
+    if (v.fifoEstOnly && !v.lotsFrom) wr.push('no lot purchased since ' + fmtDay(start) + ' — sell-through is from older stock');
     if (v.tallyGap > 0) wr.push('purchases exceed stock plus sales by ' + Math.round(v.tallyGap) + ' pcs — check entries');
     if (v.early > 0) wr.push(Math.round(v.early) + ' pcs sold before their lot was entered');
-    if (v.over > 0) wr.push(Math.round(v.over) + ' pcs sold more than purchased in ' + v.grp + ' — taken out of wider sets');
-    if (v.stockRaw < 0) wr.push('VastraApp stock is ' + Math.round(v.stockRaw) + ' in ' + v.grp);
-    if (v.brokenBy.length) wr.push('VastraApp shows ' + v.brokenBy.map(n => n.g + ' at ' + Math.round(n.cur)).join(' and ') +
-      ' — some ' + v.grp + ' sets are broken, so stock here may be overstated');
+    if (v.cutFrom.size) wr.push([...v.cutFrom].map(([g, n]) => Math.round(n) + ' pcs cut out of ' + g + ' sets').join(', '));
+    if (v.cutFor.size) wr.push([...v.cutFor].map(([g, n]) => Math.round(n) + ' pcs taken out of these sets for ' + g).join(', ') + ' — counted as sold');
+    if (v.over > 0) wr.push(Math.round(v.over) + ' pcs sold with no lot left to match — check entries');
+    if (v.short) wr.push('VastraApp has size' + (v.short.length > 1 ? 's ' : ' ') + v.short + ' below zero overall — stock entries need checking');
     if (v.retRate >= 0.1) wr.push('returns are ' + Math.round(v.retRate * 100) + '% of deliveries');
     if (v.mk.unknownShare >= 0.3) wr.push('state missing on ' + Math.round(v.mk.unknownShare * 100) + '% of sales');
     v.warn = wr;
@@ -3022,12 +3113,12 @@ function prioBuild() {
     designs.push({
       design: d, score, cls, mk, flags, variants: vs.sort((a, b) => b.score - a.score),
       sold8: vs.reduce((t, v) => t + v.recent + v.prior, 0), pending: vs.reduce((t, v) => t + v.pending, 0),
-      stock: vs.reduce((t, v) => t + v.stock, 0), colors: [...new Set(vs.map(v => v.color))],
+      stock: [...new Map(vs.map(v => [v.color, v.shelfPcs])).values()].reduce((a, b) => a + b, 0), colors: [...new Set(vs.map(v => v.color))],
     });
   }
   designs.sort((a, b) => b.score - a.score || a.design.localeCompare(b.design, undefined, { numeric: true }));
   designs.forEach((x, i) => { x.rank = i + 1; });
-  return { start, asOf, designs, variants: list };
+  return { start, asOf, designs, variants: list, all: [...V.values()] };
 }
 
 /* rebuilt only when the data underneath changes */
@@ -3055,16 +3146,19 @@ function prioVariant(v) {
     '<span class="pv-sh">' + Math.round(v.share * 100) + '% of design demand</span></div>' +
     '<div class="pv-g">' +
     cell('Velocity', v.sVel, PW.vel, f1(v.weekly8) + ' pcs/wk · ' + momTxt) +
-    cell('Demand', v.sDem, PW.dem, Math.round(v.dp) + '% · ' + Math.round(v.pending) + ' pending / ' + Math.round(v.stock) + ' in stock') +
+    cell('Demand', v.sDem, PW.dem, Math.round(v.dp) + '% · ' + Math.round(v.pending) + ' pending / ' + Math.round(v.stock) + ' in stock' +
+      (v.inWider ? ' + ' + Math.round(v.inWider) + ' inside ' + v.wider.map(x => x.size).join(', ') + ' sets' : '')) +
     cell('Cover', v.sCov, PW.cov, v.cover == null ? 'no recent sales to cover' : f1(v.cover) + ' wks · ' + Math.round(v.saleable) + ' pcs free after pending') +
     cell('FIFO', v.sFifo, PW.fifo, Math.round(v.sellThrough * 100) + '% sold through · estimate') +
     cell('Market', v.sMkt, PW.mkt, v.mk.customers + ' customers · ' + (v.mk.regions.join(', ') || 'no state') +
       ' · ' + Math.round(v.mk.repRate * 100) + '% repeat · top ' + Math.round(v.mk.topShare * 100) + '%') +
     '</div>';
+  h += '<div class="pv-sf">On the shelf (' + esc(title(v.color)) + '): ' + carveText(v.shelf) + '</div>';
   if (v.warn.length) h += '<div class="pv-w">' + v.warn.map(w => '<span>' + esc(w) + '</span>').join('') + '</div>';
   if (v.lotList.length) {
-    h += '<div class="pl"><div class="pl-r pl-hd"><span>Lot (FIFO estimate)</span><span>Qty</span><span>Sold</span><span>Left</span><span>Sold %</span><span>Age</span></div>' +
-      v.lotList.map(L => '<div class="pl-r' + (L.open ? ' pl-open' : '') + '"><span>' + esc(L.lot) + (L.t ? ' <small>' + fmtDay(L.t) + '</small>' : '') + '</span>' +
+    h += '<div class="pl"><div class="pl-r pl-hd"><span>' + (v.lotsFrom ? esc(v.lotsFrom) + ' lots it was cut from' : 'Lot (FIFO estimate)') + '</span><span>Qty</span><span>Sold</span><span>Left</span><span>Sold %</span><span>Age</span></div>' +
+      v.lotList.map(L => '<div class="pl-r' + (L.open ? ' pl-open' : '') + '"><span>' + esc(L.lot) + (L.t ? ' <small>' + fmtDay(L.t) + '</small>' : '') +
+        (L.cut ? ' <small class="pl-cut">' + Math.round(L.cut) + ' cut</small>' : '') + '</span>' +
         '<span>' + Math.round(L.qty) + '</span><span>' + Math.round(L.sold) + '</span><span>' + Math.round(L.left) + '</span>' +
         '<span>' + Math.round(L.st * 100) + '%</span><span>' + (L.days != null ? 'out in ' + L.days + 'd' : L.age + 'd') + '</span></div>').join('') + '</div>';
   }
