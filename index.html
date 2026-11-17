@@ -229,6 +229,40 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
 .pv-w span::before{content:'⚠ '}
 .pv-sf{font-size:12px;color:var(--ink-2);margin-top:7px}
 .pl-cut{color:var(--amber)}
+.pts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:12px 0 8px}
+.pt{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:9px 11px;display:flex;flex-direction:column;gap:2px}
+.pt b{font-size:21px;letter-spacing:-.02em;color:var(--ink)}.pt span{font-size:12px;color:var(--ink-2);line-height:1.3}
+.pt.good b{color:var(--good)}.pt.warn b{color:var(--short)}
+@media(max-width:760px){.pts{grid-template-columns:repeat(2,minmax(0,1fr))}.pts .pt:first-child{grid-column:1/-1}}
+.pfl{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px}
+.pfl select{flex:1 1 150px;min-width:0}
+.ptab td,.ptab th{padding:7px 9px}
+.ptab .prow{cursor:pointer}.ptab .prow:hover td{background:var(--paper)}
+.ptab .prow.open td{background:var(--paper);border-bottom-color:transparent}
+.ptab td:nth-child(2){position:sticky;left:0;background:var(--card)}
+.ptab .prow.open td:nth-child(2),.ptab .prow:hover td:nth-child(2){background:var(--paper)}
+.ptab .prc{white-space:normal;min-width:200px;font-size:12.5px}
+.pcon{font-size:11px;font-weight:700;background:var(--short-bg);color:var(--short);padding:1px 6px;border-radius:3px}
+.pdrow>td{padding:0;white-space:normal;background:var(--paper)}
+.pd-in{position:sticky;left:0;width:var(--pw,100%);max-width:100%;box-sizing:border-box;padding:4px 12px 14px}
+.ptw .pd-in{max-width:none}
+.pd-in .pp-d{margin-top:0;border-top:none}
+.pw-h{font-weight:600;margin:8px 0 4px;font-size:14px}
+.pw-l{margin:0 0 4px 18px;padding:0;font-size:13px;line-height:1.5}
+.pw-t{font-size:13px;margin:0 0 6px;color:var(--ink-2)}
+.pd-sum{font-size:13px;margin:8px 0 4px}
+.pd-t{font-size:12px;font-weight:700;color:var(--ink-2);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.03em}
+.pd-c{font-size:13px;line-height:1.55}
+.pd-n{font-size:12px;color:var(--ink-2);margin-top:6px}
+.pd-cl{display:flex;flex-wrap:wrap;gap:5px}
+.pd-cl span{font-size:12px;background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:2px 7px}
+.pd-cl small{color:var(--ink-2)}
+.pw-big{font-weight:700;color:var(--short)!important}
+.pl7 .pl-r{grid-template-columns:minmax(0,2fr) minmax(0,1.6fr) repeat(5,minmax(0,.8fr))}
+.pdx{margin-top:12px;font-size:13px}
+.pdx summary{cursor:pointer;color:var(--ink-2);font-weight:600;padding:6px 0}
+.pck{margin:4px 0 4px 18px;padding:0;font-size:12.5px}
+.pck small{color:var(--ink-2)}
 .pl{margin-top:8px;font-size:12px}
 .pl-r{display:grid;grid-template-columns:minmax(0,2.2fr) repeat(5,minmax(0,1fr));gap:4px;padding:4px 0;border-bottom:1px dashed var(--rule-2)}
 .pl-r span:not(:first-child){text-align:right}
@@ -260,6 +294,10 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
   td.tw-x{width:18px;padding-right:0}
 }
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* the priority table keeps one line per cell and scrolls sideways instead */
+.ptab th,.ptab td{white-space:nowrap;word-break:normal}
+.ptab .prc,.pdrow>td{white-space:normal}
+@media(max-width:760px){.ptab th,.ptab td{white-space:nowrap;word-break:normal;padding:6px 8px}.ptab .prc,.pdrow>td{white-space:normal}.ptab .prc{min-width:170px}}
 </style>
 </head>
 <body>
@@ -267,8 +305,8 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
 
 <header class="top">
   <h1>Pending &amp; Allotment</h1>
-  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v9.2 TEST</span>
-  <span class="chip" id="build">build 9.2</span>
+  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v10.0 TEST</span>
+  <span class="chip" id="build">build 10.0</span>
   <span class="chip" id="chip" title="Set Tracker connection">local</span>
 </header>
 <p class="sub-t">Your two pending reports, with stock already allotted against them.</p>
@@ -331,7 +369,7 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
   <button role="tab" data-p="design" aria-selected="false">Design wise pending</button>
   <button role="tab" data-p="prod" aria-selected="false">Production</button>
   <button role="tab" data-p="allot" aria-selected="false">Allotment</button>
-  <button role="tab" data-p="prio" aria-selected="false">Priority</button>
+  <button role="tab" data-p="prio" aria-selected="false">Production Priority</button>
 </nav>
 
 <section class="panel show" id="p-cust">
@@ -342,18 +380,30 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
   <div id="cust-body"><div class="empty">Load the pending order file to see this report.</div></div>
 </section>
 <section class="panel" id="p-prio">
-  <div class="seg">
-    <button type="button" class="seg-b on" data-pclass="all">All</button>
-    <button type="button" class="seg-b" data-pclass="P1">P1</button>
-    <button type="button" class="seg-b" data-pclass="P2">P2</button>
-    <button type="button" class="seg-b" data-pclass="P3">P3</button>
-    <button type="button" class="seg-b" data-pclass="P4">P4</button>
+  <div id="prio-dash"></div>
+  <div class="pfl">
+    <select id="pfElig" aria-label="Eligibility">
+      <option value="eligible">Repeat cutting list (eligible)</option>
+      <option value="review">Manual review</option>
+      <option value="not">Not eligible</option>
+      <option value="insufficient">Insufficient data</option>
+      <option value="all">All statuses</option>
+    </select>
+    <select id="pfCls" aria-label="Priority category">
+      <option value="all">All categories</option><option value="P1">P1 — High</option><option value="P2">P2 — Good</option>
+      <option value="P3">P3 — Monitor</option><option value="P4">P4 — Low</option>
+    </select>
+    <select id="pfCol" aria-label="Colour"><option value="">All colours</option></select>
+    <select id="pfSize" aria-label="Size"><option value="">All sizes</option></select>
+    <select id="pfConc" aria-label="Concentrated demand">
+      <option value="all">Any customer spread</option><option value="yes">Concentrated only</option><option value="no">Not concentrated</option>
+    </select>
   </div>
   <div class="srch">
-    <input type="text" id="qPrio" placeholder="Search design, colour or customer" autocomplete="off">
+    <input type="text" id="qPrio" placeholder="Design number" autocomplete="off" inputmode="numeric">
     <button type="button" class="clr" id="clrPrio" aria-label="Clear search">&times;</button>
   </div>
-  <div id="prio-body"><div class="empty">Load the delivery challan export to rank designs.</div></div>
+  <div id="prio-body"><div class="empty">Load the delivery challan export to rank repeat-cut candidates.</div></div>
 </section>
 <section class="panel" id="p-allot">
   <div class="seg">
@@ -1119,7 +1169,7 @@ const S = {
   openParty: new Set(),
   openLot: new Set(),
   q: { design: '', cust: '', allot: '', prod: '', prio: '' },
-  openPrio: new Set(), prioClass: 'all',
+  openPrio: new Set(), pf: { elig: 'eligible', cls: 'all', col: '', size: '', conc: 'all' },
   open: new Set(),      // expanded design rows
   openCust: new Set(),  // expanded customer sub-rows
 };
@@ -2045,8 +2095,6 @@ function onceperTap(k) {
 }
 
 document.addEventListener('click', e => {
-  const pcl = e.target.closest && e.target.closest('[data-pclass]');
-  if (pcl) { S.prioClass = pcl.dataset.pclass; return renderPrio(); }
   if (e.target.closest && e.target.closest('.pp-d')) return;   // reading a variant, not closing the design
   const ppc = e.target.closest && e.target.closest('[data-prio]');
   if (ppc) {
@@ -2804,321 +2852,360 @@ function adjust(key, d) {
 }
 
 /* ---------- production priority ----------
-   Ranks designs for repeat production, out of 100, on five criteria. Every
-   figure is worked out per design → colour → size range (as recorded) first;
-   a design's score is the demand-weighted average of its variants, and the
-   variants stay visible so one strong colour cannot hide a weak one.
-   This ranks designs for attention. It does not set quantities. */
+   Answers: which design → colour → size range should be repeat cut first?
+   Every unit is one design, one colour and one size range exactly as VastraApp
+   records it (0-3, 0-8, 4-8 …). Stock is read with the set-break rule: ranges are
+   netted size by size and read back as the most complete sets they make, so a
+   0-3 cut out of a 0-8 leaves a 4-8 set behind.
+   Two stages: a unit must first convert at least half of its first two lots
+   (delivered + confirmed pending), and only then is it ranked on four pillars.
+   This picks what deserves repeat cutting. It never sets quantities. */
 
 const DEL_TAB = 'Delivery Challans';
-const D_COLS = ['Delivery Challan Number', 'Date', 'Customer Name', 'Customer State', 'Design Number', 'Color', 'Size', 'Quantity'];
-const PW = { vel: 20, dem: 20, cov: 15, fifo: 20, mkt: 25 };
-const CORE_STATES = { 'maharashtra': 'Maharashtra', 'gujarat': 'Gujarat', 'madhya pradesh': 'Madhya Pradesh' };
-const LOT_TARGET_DAYS = 90;          // a lot is expected to sell through in about three months
+const D_COLS = ['Delivery Challan Number', 'Order Number', 'Date', 'Customer Name', 'Customer State', 'Design Number', 'Color', 'Size', 'Quantity'];
+
+/* ===== PRIORITY CONFIGURATION — every weight and threshold lives here ===== */
+const PRIO_CFG = {
+  weights: { mkt: 25, pend: 30, speed: 25, conv: 20 },   // fixed by the brief; adds to 100
+  eligibleConv: 50,          // % of first two lots delivered or on order before a unit is ranked
+  convFull: 100,             // conversion at or above this earns the full 5 (capped)
+  concentratedMax: 3,        // this many customers or fewer per design-colour = concentrated demand
+  fgLagDays: 30,             // finished-goods date = purchase inward (cutting) date + this many days (estimate)
+  newLotGraceDays: 60,       // a lot younger than this that has not reached 50% is left out of sales speed
+  reviewPctile: 0.9,         // a single party's pending in the top 10% of units flags a non-eligible unit for review
+  returnsWarn: 0.1,          // returns at or above 10% of deliveries raise a warning
+  classes: [[80, 'P1'], [65, 'P2'], [45, 'P3'], [0, 'P4']],
+  // Market, pending and speed are scored against every comparable unit in the same data:
+  // score = 5 × (share of units below it + half the ties). Speed ranks faster above slower.
+};
+/* ========================================================================== */
+
 const anyDate = v => purchaseDate(v) || jDate(v);
 const clamp01 = x => Math.max(0, Math.min(1, x));
-
 function prioClassOf(raw) {
   const score = Math.round(raw);   // the class always matches the number shown
-  return score >= 80 ? 'P1' : score >= 65 ? 'P2' : score >= 45 ? 'P3' : 'P4';
+  return PRIO_CFG.classes.find(([min]) => score >= min)[1];
 }
-const P_LABEL = { P1: 'High priority', P2: 'Good potential', P3: 'Monitor', P4: 'Low priority' };
-const C_LABEL = { broad: 'Broadly validated', partial: 'Partially validated', conc: 'Concentrated demand', thin: 'Insufficient evidence' };
+const P_LABEL = { P1: 'P1 — High priority', P2: 'P2 — Good potential', P3: 'P3 — Monitor', P4: 'P4 — Low priority' };
+const ST_LABEL = { eligible: 'Eligible', review: 'Manual review', not: 'Not eligible', insufficient: 'Insufficient data' };
+const CONC_TXT = 'CONCENTRATED DEMAND — 3 OR FEWER CUSTOMERS';
 
-/* who bought, where, how often — shared by variants and whole designs */
-function marketOf(events) {
-  const total = events.reduce((t, e) => t + e.pcs, 0);
-  const byCust = new Map();
-  const regions = new Map();
-  let unknown = 0;
-  const challans = new Set();
-  for (const e of events) {
-    const c = byCust.get(e.cust) || { pcs: 0, ch: new Set() };
-    c.pcs += e.pcs; c.ch.add(e.challan || e.t); byCust.set(e.cust, c);
-    challans.add(e.challan || (e.cust + e.t));
-    if (!e.state) unknown += e.pcs;
-    else { const r = CORE_STATES[e.state] || 'Other'; regions.set(r, (regions.get(r) || 0) + e.pcs); }
-  }
-  const customers = byCust.size;
-  const top = customers ? Math.max(...[...byCust.values()].map(c => c.pcs)) : 0;
-  const topShare = total ? top / total : 0;
-  const repeaters = [...byCust.values()].filter(c => c.ch.size >= 2).length;
-  const k = regions.size;
-  const custScore = customers === 0 ? 0 : customers === 1 ? 1 : customers === 2 ? 2 : customers <= 4 ? 3 : customers <= 7 ? 4 : 5;
-  const regScore = k === 0 ? 0 : k === 1 ? 1.5 : k === 2 ? 3.5 : 5;
-  const repRate = customers ? repeaters / customers : 0;
-  const repScore = 5 * repRate;
-  const concScore = total ? 5 * clamp01((1 - topShare) / 0.75) : 0;
-  const score = (10 * custScore + 7 * regScore + 5 * repScore + 3 * concScore) / 25;
-  const conf = (total < 20 || challans.size < 3) ? 'thin'
-    : (topShare >= 0.6 || customers <= 2) ? 'conc'
-    : (customers >= 5 && topShare <= 0.35 && k >= 2) ? 'broad' : 'partial';
-  return {
-    total, customers, topShare, repeaters, repRate, regions: [...regions.keys()], k,
-    unknownShare: total ? unknown / total : 0, custScore, regScore, repScore, concScore, score, conf,
-  };
+/* rank against comparable values: share below + half of ties, 0..1 */
+function pctRank(sorted, x) {
+  let lo = 0, hi = sorted.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] < x) lo = m + 1; else hi = m; }
+  let eq = lo; while (eq < sorted.length && sorted[eq] === x) eq++;
+  return sorted.length ? (lo + (eq - lo) / 2) / sorted.length : 0;
+}
+
+/* data checks on the two new feeds — nothing is skipped silently */
+function prioChecks() {
+  const c = { del: { rows: 0, used: 0, issues: [] }, pur: { rows: 0, used: 0, issues: [] }, dupes: [], dupeKeys: new Set(), dupeIdx: new Set() };
+  const note = (bag, row, why, r) => bag.issues.push({ row, why, what: r });
+  const seen = new Map();
+  const hasOrderNo = !!(S.delRows && S.delRows[0] && 'Order Number' in S.delRows[0]);
+  (S.delRows || []).forEach((r, i) => {
+    c.del.rows++;
+    const row = i + 2, why = [];
+    if (!stripDes(r['Design Number'])) why.push('design number missing');
+    if (!normColor(r['Color'])) why.push('colour missing');
+    if (!expandSize(r['Size'])) why.push('size not readable (' + (r['Size'] || 'blank') + ')');
+    if (!String(r['Customer Name'] || '').trim()) why.push('customer missing');
+    if (!anyDate(r['Date'])) why.push('date not readable (' + (r['Date'] || 'blank') + ')');
+    if (!(Number(r['Quantity']) > 0)) why.push('quantity not above zero (' + (r['Quantity'] || 'blank') + ')');
+    const what = [r['Delivery Challan Number'], r['Design Number'], r['Color'], r['Size'], r['Quantity']].join(' · ');
+    if (why.length) return note(c.del, row, why.join(', '), what);
+    c.del.used++;
+    if (!hasOrderNo) return;   // without the order number, repeated lines on one challan are normal
+    const k = [r['Delivery Challan Number'], r['Order Number'], r['Customer Name'], r['Design Number'], r['Color'], r['Size'], r['Quantity'], r['Date']].map(x => String(x || '').trim().toLowerCase()).join('|');
+    if (seen.has(k)) { c.dupes.push({ row, first: seen.get(k), what }); c.dupeKeys.add(stripDes(r['Design Number']) + '|' + normColor(r['Color'])); c.dupeIdx.add(i); c.del.used--; }
+    else seen.set(k, row);
+  });
+  (S.purchRows || []).forEach((r, i) => {
+    c.pur.rows++;
+    const row = i + 2, why = [];
+    if (!stripDes(r['Design Name Without Prefix'] || r['Design Number'])) why.push('design number missing');
+    if (!normColor(r['Color'])) why.push('colour missing');
+    if (!expandSize(r['Size'])) why.push('size not readable (' + (r['Size'] || 'blank') + ')');
+    if (!anyDate(r['Purchase Date'])) why.push('purchase date not readable (' + (r['Purchase Date'] || 'blank') + ')');
+    if (!(Number(r['Quantity']) > 0)) why.push('quantity not above zero (' + (r['Quantity'] || 'blank') + ')');
+    const what = [r['Challan No'], r['Design Number'], r['Color'], r['Size'], r['Quantity']].join(' · ');
+    if (why.length) return note(c.pur, row, why.join(', '), what);
+    c.pur.used++;
+    if (!lotId(r['Challan No'])) note(c.pur, row, 'no Challan No. — kept as its own lot by date', what);
+  });
+  return c;
 }
 
 function prioBuild() {
-  // every figure is taken per size range exactly as VastraApp records it (0-3, 0-8, 4-8 …)
-  const V = new Map();                         // design|color|range -> variant
+  const CFG = PRIO_CFG;
+  const checks = prioChecks();
+  const V = new Map();                         // design|color|range -> unit
   const vget = (d, c, g) => {
     const k = d + '|' + c + '|' + g;
-    if (!V.has(k)) V.set(k, { key: k, design: d, color: c, grp: g, events: [], lots: new Map(), pending: 0, stock: 0, stockRaw: 0, sr: 0, dl: 0 });
+    if (!V.has(k)) V.set(k, { key: k, design: d, color: c, grp: g, events: [], lots: new Map(), pending: 0, pendBy: new Map(), stock: 0, stockRaw: 0, sr: 0 });
     return V.get(k);
   };
   const rangeOf = raw => { const sz = expandSize(raw); return sz ? rangeLabel(sz) : null; };
 
-  // deliveries: one event per challan line, quantity as recorded
+  // deliveries — actual, as recorded
   let start = Infinity, asOf = 0;
-  for (const r of (S.delRows || [])) {
+  (S.delRows || []).forEach((r, i) => {
+    if (checks.dupeIdx.has(i)) return;          // an exact repeat of an earlier line is counted once
     const d = stripDes(r['Design Number']); const c = normColor(r['Color']);
     const g = rangeOf(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Date']);
-    if (!d || !c || !g || !(q > 0) || !t) continue;
+    const name = String(r['Customer Name'] || '').trim();
+    if (!d || !c || !g || !(q > 0) || !t || !name) return;
     start = Math.min(start, t); asOf = Math.max(asOf, t);
-    vget(d, c, g).events.push({
-      t, pcs: q, cust: custKey(r['Customer Name']), name: normCust(r['Customer Name']),
-      state: String(r['Customer State'] || '').trim().toLowerCase(), challan: String(r['Delivery Challan Number'] || '').trim(),
-    });
-  }
-  if (!isFinite(start)) return null;
+    vget(d, c, g).events.push({ t, pcs: q, cust: custKey(name), name: normCust(name), challan: String(r['Delivery Challan Number'] || '').trim() });
+  });
+  if (!isFinite(start)) return { checks, empty: true };
 
-  // purchase lots dated inside the delivery window, quantity as recorded; anything older folds into the opening lot
+  // purchase inward = cut, not finished: finished date is estimated as cutting date + lag
   for (const r of (S.purchRows || [])) {
     const d = stripDes(r['Design Name Without Prefix'] || r['Design Number']); const c = normColor(r['Color']);
     const g = rangeOf(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Purchase Date']);
     if (!d || !c || !g || !(q > 0) || !t || t < start) continue;
-    const lot = lotId(r['Challan No']) || 'no challan no.';
-    const v = vget(d, c, g); const lk = lotId(r['Challan No']) ? lot : lot + '@' + t;
-    const L = v.lots.get(lk) || { lot, t, qty: 0 };
-    L.qty += q; L.t = Math.min(L.t, t); v.lots.set(lk, L);
+    const id = lotId(r['Challan No']);
+    const lot = id || 'no challan no.';
+    const v = vget(d, c, g); const lk = id ? lot : lot + '@' + t;
+    const L = v.lots.get(lk) || { lot, cutT: t, qty: 0 };
+    L.qty += q; L.cutT = Math.min(L.cutT, t); v.lots.set(lk, L);
   }
 
-  // pending orders, per line as recorded
+  // pending orders — genuinely unfulfilled lines from the pending report, as recorded
   for (const ln of (S.lines || [])) {
-    const g = rangeLabel(ln.sizes);
-    if (ln.qty > 0) vget(ln.design, ln.color, g).pending += ln.qty;
+    if (!(ln.qty > 0)) continue;
+    const v = vget(ln.design, ln.color, rangeLabel(ln.sizes));
+    v.pending += ln.qty;
+    const p = v.pendBy.get(ln.ckey) || { name: ln.customer, pcs: 0 };
+    p.pcs += ln.qty; v.pendBy.set(ln.ckey, p);
   }
 
-  // stock, sales return and delivered — the stock report's own figures per range
-  const C = new Map();                         // design|color -> ranges recorded anywhere, and the ones below zero
+  // stock report figures per range, and the set-break shelf per colour
+  const C = new Map();
   const cget = dc => { if (!C.has(dc)) C.set(dc, { ranges: new Map(), negs: [] }); return C.get(dc); };
   for (const v of V.values()) cget(v.design + '|' + v.color).ranges.set(v.grp, expandSize(v.grp));
+  const rawBySize = new Map();
   for (const r of (S.stockRows || [])) {
     const sz = expandSize(r['Size']); if (!sz) continue;
     const g = rangeLabel(sz);
-    const d = stripDes(r['Design Name']), c = normColor(r['Color Name']);
+    const d = stripDes(r['Design Name']), c = normColor(r['Color Name']), dc = d + '|' + c;
     const cur = Number(r['Current Stock'] || 0);
-    const cc = cget(d + '|' + c); cc.ranges.set(g, sz);
+    const cc = cget(dc); cc.ranges.set(g, sz);
     if (cur < 0) cc.negs.push(sz);
-    const v = V.get(d + '|' + c + '|' + g); if (!v) continue;
-    v.stockRaw += cur;
-    v.sr += Number(r['Sales Return'] || 0); v.dl += Number(r['Delivered Stock'] || 0);
-  }
-
-  // what is really on the shelf: VastraApp's ranges netted size by size, then read back as the
-  // most complete sets they make — so a 0-3 cut out of a 0-8 leaves a 4-8 set, not a 0-8 one
-  const netted = S.netted || (S.stockRows ? netStock(S.stockRows, { stockColumn: 'Current Stock' }).stock : new Map());
-  const rawBySize = new Map();                 // sizes VastraApp is short of overall, after netting every range
-  for (const r of (S.stockRows || [])) {
-    const sz = expandSize(r['Size']); if (!sz) continue;
-    const dc = stripDes(r['Design Name']) + '|' + normColor(r['Color Name']);
     if (!rawBySize.has(dc)) rawBySize.set(dc, {});
-    const b = rawBySize.get(dc), per = spread(Number(r['Current Stock'] || 0), sz);
+    const b = rawBySize.get(dc), per = spread(cur, sz);
     for (const x of sz) b[x] = (b[x] || 0) + per[x];
+    const v = V.get(dc + '|' + g); if (!v) continue;
+    v.stockRaw += cur;
+    v.sr += Number(r['Sales Return'] || 0);
   }
+  const netted = S.netted || (S.stockRows ? netStock(S.stockRows, { stockColumn: 'Current Stock' }).stock : new Map());
   for (const [dc, cc] of C) {
     const short = Object.keys(rawBySize.get(dc) || {}).map(Number).filter(x => rawBySize.get(dc)[x] < -0.01).sort((a, b) => a - b);
     cc.short = !short.length ? '' : short.every((x, i) => i === 0 || x === short[i - 1] + 1) ? rangeLabel(short) : short.join(', ');
-    const rs = withComplements([...cc.ranges.values()], cc.negs);
-    cc.shelf = carve(netted.get(dc) || {}, rs);
+    cc.shelf = carve(netted.get(dc) || {}, withComplements([...cc.ranges.values()], cc.negs));
     cc.shelfPcs = cc.shelf.sets.reduce((t, x) => t + x.pcs, 0) + cc.shelf.loose.reduce((t, x) => t + x.pcs, 0);
   }
   for (const v of V.values()) {
     const cc = C.get(v.design + '|' + v.color);
     const sz = expandSize(v.grp) || [];
     const own = cc.shelf.sets.find(x => x.size === v.grp);
-    v.stock = own ? own.pcs : 0;                               // complete sets of exactly this range
+    v.stock = own ? own.pcs : 0;
     v.wider = cc.shelf.sets.filter(x => { const w = expandSize(x.size) || []; return w.length > sz.length && sz.every(s => w.includes(s)); })
       .map(x => ({ size: x.size, sets: x.sets, pcs: x.sets * sz.length }));
-    v.inWider = v.wider.reduce((t, x) => t + x.pcs, 0);       // this range's pieces sitting inside wider sets
+    v.inWider = v.wider.reduce((t, x) => t + x.pcs, 0);
     v.avail = v.stock + v.inWider;
-    v.shelf = cc.shelf; v.shelfPcs = cc.shelfPcs; v.short = cc.short;
+    v.shelf = cc.shelf; v.short = cc.short;
   }
 
-  // FIFO — an estimate: deliveries are not linked to lots. Worked colour by colour, oldest
-  // lot first. A sale that its own range's lots cannot cover was cut out of a wider set, so it
-  // is taken from the wider range's lots — 4 pcs of a 0-8 lot for a 0-3, leaving its 4-8 behind.
-  const lotAge = L => Math.max(0, Math.round((asOf - (L.t == null ? start : L.t)) / DAY));
+  // FIFO — an estimate, since deliveries are not linked to lots. Oldest finished lot first.
+  // Set-break rule: a sale its own range's lots cannot cover was cut out of a wider set, so it
+  // comes out of the wider range's lots (4 pcs of a 0-8 lot for a 0-3, its 4-8 left behind).
   const byColour = new Map();
   for (const v of V.values()) { const dc = v.design + '|' + v.color; if (!byColour.has(dc)) byColour.set(dc, []); byColour.get(dc).push(v); }
+  const wideOf = (v, vs) => vs.filter(w => w.sizes.length > v.sizes.length && v.sizes.every(s => w.sizes.includes(s)))
+    .sort((a, b) => a.sizes.length - b.sizes.length);
   for (const [, vs] of byColour) {
     for (const v of vs) {
       v.sold = v.events.reduce((t, e) => t + e.pcs, 0);
+      v.sizes = expandSize(v.grp) || [];
       const bought = [...v.lots.values()].reduce((t, l) => t + l.qty, 0);
       const openRaw = v.stockRaw + v.sold - bought;
       v.tallyGap = Math.max(0, bought - v.sold - Math.max(0, v.stockRaw));
-      v.sizes = expandSize(v.grp) || [];
-      v.allLots = [{ lot: 'Before ' + fmtDay(start), t: null, qty: Math.max(0, openRaw), sold: 0, cut: 0, open: true, range: v.grp }]
-        .concat([...v.lots.values()].sort((a, b) => a.t - b.t).map(l => ({ lot: l.lot, t: l.t, qty: l.qty, sold: 0, cut: 0, range: v.grp })));
-      v.early = 0; v.over = 0; v.cutFrom = new Map(); v.cutFor = new Map();
       v.preCut = Math.max(0, -openRaw);
+      v.allLots = [{ lot: 'Stock on ' + fmtDay(start), t: start, cutT: null, qty: Math.max(0, openRaw), opening: true }]
+        .concat([...v.lots.values()].map(l => ({ lot: l.lot, cutT: l.cutT, t: l.cutT + CFG.fgLagDays * DAY, qty: l.qty })))
+        .sort((a, b) => a.t - b.t);
+      v.allLots.forEach(L => { L.sold = 0; L.cut = 0; L.hist = []; L.unit = v; });
+      v.early = 0; v.over = 0; v.cutFrom = new Map(); v.cutFor = new Map();
     }
-    // a range already below zero before the window was cut out of wider sets back then,
-    // so those wider sets were not on the shelf at the start either
+    // a range already below zero at the start was cut out of wider sets back then
     for (const v of vs) {
       let need = v.preCut;
-      const wide = vs.filter(w => w.sizes.length > v.sizes.length && v.sizes.every(s => w.sizes.includes(s)))
-        .sort((a, b) => a.sizes.length - b.sizes.length);
-      for (const w of wide) {
+      for (const w of wideOf(v, vs)) {
         if (need <= 0) break;
-        const L = w.allLots[0]; const take = Math.min(need, L.qty);
+        const L = w.allLots.find(x => x.opening); const take = Math.min(need, L.qty);
         L.qty -= take; need -= take;
       }
     }
     const evs = vs.flatMap(v => v.events.map(e => ({ e, v }))).sort((a, b) => a.e.t - b.e.t);
     for (const { e, v } of evs) {
       let need = e.pcs;
-      const draw = (lots, onlyDated, cb) => {
+      const draw = (lots, onlyReady, cb) => {
         for (const L of lots) {
           if (need <= 0) break;
-          if (onlyDated && L.t != null && L.t > e.t) continue;
+          if (onlyReady && L.t > e.t) continue;
           const take = Math.min(need, L.qty - L.sold);
-          if (take > 0) { L.sold += take; need -= take; if (L.sold >= L.qty) L.outAt = e.t; cb(L, take); }
+          if (take > 0) { L.sold += take; L.hist.push([e.t, take]); need -= take; cb(L, take); }
         }
       };
       draw(v.allLots, true, () => {});
-      draw(v.allLots, false, (L, n) => { v.early += n; });     // sold before its lot was entered
+      draw(v.allLots, false, (L, n) => { v.early += n; });      // sold before the lot's estimated finish date
       if (need > 0) {
-        const wide = vs.filter(w => w.sizes.length > v.sizes.length && v.sizes.every(s => w.sizes.includes(s)))
-          .sort((a, b) => a.sizes.length - b.sizes.length);
-        const wl = wide.flatMap(w => w.allLots.map(L => ({ L, w }))).sort((a, b) => (a.L.t == null ? -1 : a.L.t) - (b.L.t == null ? -1 : b.L.t));
+        const wl = wideOf(v, vs).flatMap(w => w.allLots).sort((a, b) => a.t - b.t);
         const note = (L, n) => {
           L.cut += n;
-          const w = wl.find(x => x.L === L).w;
-          v.cutFrom.set(w.grp, (v.cutFrom.get(w.grp) || 0) + n);
-          w.cutFor.set(v.grp, (w.cutFor.get(v.grp) || 0) + n);
+          v.cutFrom.set(L.unit.grp, (v.cutFrom.get(L.unit.grp) || 0) + n);
+          L.unit.cutFor.set(v.grp, (L.unit.cutFor.get(v.grp) || 0) + n);
         };
-        draw(wl.map(x => x.L), true, note);
-        draw(wl.map(x => x.L), false, note);
+        draw(wl, true, note);
+        draw(wl, false, note);
       }
       v.over += Math.max(0, need);
     }
     for (const v of vs) for (const L of v.allLots) {
       L.left = L.qty - L.sold;
-      L.age = lotAge(L);
+      L.age = Math.round((asOf - L.t) / DAY);
       L.st = L.qty ? L.sold / L.qty : 0;
-      if (L.qty > 0 && L.sold >= L.qty && L.outAt != null) {
-        L.days = Math.max(1, Math.round((L.outAt - (L.t == null ? start : L.t)) / DAY));
-        L.ratio = Math.min(1, LOT_TARGET_DAYS / L.days);
-      } else {
-        const expect = Math.min(1, L.age / LOT_TARGET_DAYS);
-        L.ratio = expect > 0 ? Math.min(1, L.st / expect) : (L.st > 0 ? 1 : 0);
+      let cum = 0;
+      for (const [t, n] of L.hist) {
+        const before = cum; cum += n;
+        if (L.t25 == null && before < 0.25 * L.qty && cum >= 0.25 * L.qty) L.t25 = t;
+        if (L.t50 == null && before < 0.5 * L.qty && cum >= 0.5 * L.qty) L.t50 = t;
       }
-    }
-    // a range with no lots of its own is judged on the wider lots it was cut from
-    for (const v of vs) {
-      v.lotList = v.allLots.filter(L => L.qty > 0);
-      v.lotsFrom = null;
-      if (!v.lotList.length && v.cutFrom.size) {
-        const src = vs.filter(w => v.cutFrom.has(w.grp));
-        v.lotList = src.flatMap(w => w.allLots.filter(L => L.qty > 0));
-        v.lotsFrom = src.map(w => w.grp).join(', ');
-      }
+      L.d25 = L.t25 == null ? null : Math.max(0, Math.round((L.t25 - L.t) / DAY));
+      L.d50 = L.t50 == null ? null : Math.max(0, Math.round((L.t50 - L.t) / DAY));
     }
   }
 
-  // per-variant figures
-  const list = [...V.values()].filter(v => v.events.length || v.pending > 0);
-  const r4 = asOf - 28 * DAY, r8 = asOf - 56 * DAY;
-  for (const v of list) {
-    v.events.sort((a, b) => a.t - b.t);
-    v.recent = v.events.filter(e => e.t > r4).reduce((t, e) => t + e.pcs, 0);
-    v.prior = v.events.filter(e => e.t > r8 && e.t <= r4).reduce((t, e) => t + e.pcs, 0);
-    v.weekly8 = (v.recent + v.prior) / 8;
-    v.forecast = 0.6 * v.recent / 4 + 0.4 * v.prior / 4;
-    v.momentum = v.prior ? v.recent / v.prior : (v.recent ? Infinity : 0);
+  // units analysed: anything sold, on order or cut this year
+  const list = [...V.values()].filter(v => v.events.length || v.pending > 0 || v.allLots.some(L => !L.opening && L.qty > 0));
 
-    // demand pressure — stock counts this range's own sets and its pieces inside wider sets
+  // customers per design-colour (once each, whatever range they bought)
+  const dcCust = new Map();
+  for (const v of V.values()) {
+    const dc = v.design + '|' + v.color;
+    if (!dcCust.has(dc)) dcCust.set(dc, new Map());
+    const m = dcCust.get(dc);
+    for (const e of v.events) { const c = m.get(e.cust) || { name: e.name, pcs: 0 }; c.pcs += e.pcs; m.set(e.cust, c); }
+  }
+
+  // per-unit raw metrics
+  for (const v of list) {
+    const dc = v.design + '|' + v.color;
+    const cm = dcCust.get(dc);
+    v.dcCustomers = [...cm.values()].sort((a, b) => b.pcs - a.pcs);
+    v.dcDelivered = v.dcCustomers.reduce((t, c) => t + c.pcs, 0);
+    v.nCust = v.dcCustomers.length;
+    v.topShare = v.dcDelivered ? v.dcCustomers[0].pcs / v.dcDelivered : 0;
+    const uc = new Map(); for (const e of v.events) uc.set(e.cust, (uc.get(e.cust) || 0) + e.pcs);
+    v.unitCust = uc.size;
+    v.concentrated = v.nCust <= CFG.concentratedMax;
+
+    v.pendList = [...v.pendBy.values()].sort((a, b) => b.pcs - a.pcs);
+    v.topPend = v.pendList.length ? v.pendList[0].pcs : 0;
     v.dp = v.avail + v.pending > 0 ? 100 * v.pending / (v.avail + v.pending) : 0;
-    v.sDem = v.dp / 20;
 
-    // stock cover: complete sets only, less what pending orders already claim
-    v.saleable = Math.max(0, v.avail - v.pending);
-    v.cover = v.forecast > 0 ? v.saleable / v.forecast : null;
-    const w = v.cover;
-    v.sCov = w == null ? 0 : w <= 1 ? 5 : w <= 2 ? 4 : w <= 4 ? 3 : w <= 8 ? 2 : w <= 12 ? 1 : 0;
+    // first two lots of its own, by estimated finish date
+    v.own = v.allLots.filter(L => L.qty > 0);
+    v.first2 = v.own.slice(0, 2);
+    v.later = v.own.slice(2);
+    v.initial = v.first2.reduce((t, L) => t + L.qty, 0);
+    v.cutFromTot = [...v.cutFrom.values()].reduce((a, b) => a + b, 0);
+    v.cutForTot = [...v.cutFor.values()].reduce((a, b) => a + b, 0);
+    v.returns = Math.max(0, v.sr);
+    v.netDel = Math.max(0, v.sold - v.returns);
+    // what left this unit's own production: its deliveries, less pieces that came out of wider sets,
+    // plus pieces of its sets cut away for narrower ranges
+    v.convNum = Math.max(0, v.netDel - v.cutFromTot + v.cutForTot) + v.pending;
+    v.conv = v.initial > 0 ? 100 * v.convNum / v.initial : null;
 
-    const dated = v.lotList.filter(L => !L.open);
-    const judged = dated.filter(L => L.age >= 14);
-    const basis = judged.length ? judged : dated.length ? dated : v.lotList;
-    const wq = basis.reduce((t, L) => t + L.qty, 0);
-    v.fifoEstOnly = !dated.length;
-    v.sFifo = wq ? 5 * basis.reduce((t, L) => t + L.ratio * L.qty, 0) / wq : 0;
-    const lq = v.lotList.reduce((t, L) => t + L.qty, 0);
-    v.sellThrough = lq ? v.lotList.reduce((t, L) => t + L.sold, 0) / lq : 0;
-
-    // market validation
-    v.mk = marketOf(v.events);
-    v.sMkt = v.mk.score;
-    v.retRate = v.dl > 0 ? v.sr / v.dl : 0;
+    // sales speed of the first two lots: days from finish to 50% sold (FIFO estimate)
+    v.speedLots = v.first2.map(L => {
+      if (L.d50 != null) return { L, d: L.d50, how: 'reached 50% in ' + L.d50 + ' days' };
+      if (L.age < 0) return { L, d: null, how: 'not finished yet (est. ' + fmtDay(L.t) + ')' };
+      if (L.age < CFG.newLotGraceDays) return { L, d: null, how: 'too new to judge (' + L.age + ' days, under 50% sold)' };
+      return { L, d: L.age, how: 'not at 50% after ' + L.age + ' days', open: true };
+    });
+    const used = v.speedLots.filter(x => x.d != null);
+    const uq = used.reduce((t, x) => t + x.L.qty, 0);
+    v.speed = used.length && uq ? used.reduce((t, x) => t + x.d * x.L.qty, 0) / uq : null;
   }
 
-  // velocity: recent weekly rate ranked against every other selling variant, plus momentum
-  const rates = list.filter(v => v.weekly8 > 0).map(v => v.weekly8).sort((a, b) => a - b);
-  const n = rates.length;
+  // relative scores against comparable units
+  const custVals = [...new Set(list.map(v => v.design + '|' + v.color))].map(dc => dcCust.get(dc).size).filter(n => n > 0).sort((a, b) => a - b);
+  const pendVals = list.map(v => v.pending).filter(x => x > 0).sort((a, b) => a - b);
+  const speedVals = list.map(v => v.speed).filter(x => x != null).map(x => -x).sort((a, b) => a - b);
+  const topPendVals = list.map(v => v.topPend).filter(x => x > 0).sort((a, b) => a - b);
+  const reviewCut = topPendVals.length ? topPendVals[Math.min(topPendVals.length - 1, Math.floor(CFG.reviewPctile * topPendVals.length))] : Infinity;
+  const W = CFG.weights;
   for (const v of list) {
-    if (!(v.weekly8 > 0)) { v.sVel = 0; v.level = 0; continue; }
-    let less = 0, eq = 0; for (const x of rates) { if (x < v.weekly8) less++; else if (x === v.weekly8) eq++; }
-    v.level = (less + (eq + 1) / 2) / n;
-    const mom = v.prior ? clamp01(v.recent / v.prior / 2) : (v.recent ? 1 : 0);
-    v.sVel = 5 * (0.7 * v.level + 0.3 * mom);
-  }
+    v.pr = {
+      mkt: v.nCust ? pctRank(custVals, v.nCust) : 0,
+      pend: v.pending > 0 ? pctRank(pendVals, v.pending) : 0,
+      speed: v.speed == null ? null : pctRank(speedVals, -v.speed),
+    };
+    v.s = {
+      mkt: 5 * v.pr.mkt,
+      pend: 5 * v.pr.pend,
+      speed: v.speed == null ? null : 5 * v.pr.speed,
+      conv: v.conv == null ? null : 5 * Math.min(1, v.conv / CFG.convFull),
+    };
+    v.pts = {
+      mkt: v.s.mkt / 5 * W.mkt, pend: v.s.pend / 5 * W.pend,
+      speed: v.s.speed == null ? null : v.s.speed / 5 * W.speed,
+      conv: v.s.conv == null ? null : v.s.conv / 5 * W.conv,
+    };
+    const complete = v.s.speed != null && v.s.conv != null;
+    v.score = complete ? v.pts.mkt + v.pts.pend + v.pts.speed + v.pts.conv : null;
+    v.pass = v.conv != null && v.conv >= CFG.eligibleConv;
+    v.bigOrder = v.topPend > 0 && v.topPend >= reviewCut;
+    v.status = !v.own.length || v.conv == null ? 'insufficient'
+      : !v.pass ? (v.bigOrder ? 'review' : 'not')
+      : v.score == null ? 'insufficient' : 'eligible';
+    v.cls = v.status === 'eligible' ? prioClassOf(v.score) : null;
 
-  for (const v of list) {
-    v.score = (v.sVel / 5) * PW.vel + (v.sDem / 5) * PW.dem + (v.sCov / 5) * PW.cov + (v.sFifo / 5) * PW.fifo + (v.sMkt / 5) * PW.mkt;
-    v.cls = prioClassOf(v.score);
-    v.weight = v.pending + v.recent + v.prior;
     const wr = [];
-    if (!(v.weekly8 > 0) && v.sold) wr.push('no sales in the last 8 weeks');
-    if (v.fifoEstOnly && !v.lotsFrom) wr.push('no lot purchased since ' + fmtDay(start) + ' — sell-through is from older stock');
+    if (v.concentrated) wr.push(CONC_TXT);
+    if (!v.own.length) wr.push(v.cutFrom.size ? 'no lot of its own — cut out of ' + [...v.cutFrom.keys()].join(', ') + ' sets' : 'no production record — no stock on ' + fmtDay(start) + ' and no purchase inward since');
+    else if (v.own[0].opening) wr.push('lot 1 is stock on hand on ' + fmtDay(start) + ' (when the data starts), not a dated lot — estimate');
+    if (v.first2.length === 1) wr.push('only one lot so far — conversion uses that lot alone');
+    if (v.status === 'insufficient' && v.own.length && v.speed == null) wr.push('sales speed: ' + v.speedLots.map(x => x.how).join('; '));
+    if (v.status === 'review') wr.push('MANUAL REVIEW — ' + v.pendList[0].name + ' has ' + Math.round(v.topPend) + ' pcs pending, among the largest single orders');
     if (v.tallyGap > 0) wr.push('purchases exceed stock plus sales by ' + Math.round(v.tallyGap) + ' pcs — check entries');
-    if (v.early > 0) wr.push(Math.round(v.early) + ' pcs sold before their lot was entered');
-    if (v.cutFrom.size) wr.push([...v.cutFrom].map(([g, n]) => Math.round(n) + ' pcs cut out of ' + g + ' sets').join(', '));
-    if (v.cutFor.size) wr.push([...v.cutFor].map(([g, n]) => Math.round(n) + ' pcs taken out of these sets for ' + g).join(', ') + ' — counted as sold');
+    if (v.early > 0) wr.push(Math.round(v.early) + ' pcs sold before their lot’s estimated finish date');
+    if (v.cutFrom.size && v.own.length) wr.push([...v.cutFrom].map(([g, n]) => Math.round(n) + ' pcs cut out of ' + g + ' sets').join(', '));
+    if (v.cutFor.size) wr.push([...v.cutFor].map(([g, n]) => Math.round(n) + ' pcs of these sets cut away for ' + g).join(', '));
     if (v.over > 0) wr.push(Math.round(v.over) + ' pcs sold with no lot left to match — check entries');
     if (v.short) wr.push('VastraApp has size' + (v.short.length > 1 ? 's ' : ' ') + v.short + ' below zero overall — stock entries need checking');
-    if (v.retRate >= 0.1) wr.push('returns are ' + Math.round(v.retRate * 100) + '% of deliveries');
-    if (v.mk.unknownShare >= 0.3) wr.push('state missing on ' + Math.round(v.mk.unknownShare * 100) + '% of sales');
+    if (v.sold && v.returns / v.sold >= CFG.returnsWarn) wr.push('returns are ' + Math.round(100 * v.returns / v.sold) + '% of deliveries');
+    if (checks.dupeKeys.has(v.design + '|' + v.color)) wr.push('repeated delivery lines for this colour were counted once — see data checks');
     v.warn = wr;
+    v.rec = v.status === 'eligible'
+      ? ({ P1: 'Repeat cut first', P2: 'Repeat cut candidate', P3: 'Monitor — not yet', P4: 'Low priority — hold' }[v.cls]) + (v.concentrated ? ' · confirm with the customer(s) first' : '')
+      : v.status === 'review' ? 'Manual review — large confirmed order, below 50% conversion'
+      : v.status === 'not' ? 'Not eligible — ' + Math.round(v.conv) + '% conversion is under ' + CFG.eligibleConv + '%'
+      : 'Insufficient data';
   }
 
-  // designs: demand-weighted average of their variants
-  const byD = new Map();
-  for (const v of list) { if (!byD.has(v.design)) byD.set(v.design, []); byD.get(v.design).push(v); }
-  const designs = [];
-  for (const [d, vs] of byD) {
-    let ws = vs.map(v => v.weight);
-    if (!ws.some(x => x > 0)) ws = vs.map(v => v.sold);
-    if (!ws.some(x => x > 0)) ws = vs.map(() => 1);
-    const W = ws.reduce((a, b) => a + b, 0);
-    const score = vs.reduce((t, v, i) => t + v.score * ws[i], 0) / W;
-    const mk = marketOf(vs.flatMap(v => v.events));
-    const cls = prioClassOf(score);
-    const flags = [];
-    if ((cls === 'P1' || cls === 'P2') && (mk.conf === 'conc' || mk.conf === 'thin')) flags.push('Trial repeat only — ' + C_LABEL[mk.conf].toLowerCase());
-    const weak = vs.filter((v, i) => ws[i] / W >= 0.15 && v.cls === 'P4');
-    if ((cls === 'P1' || cls === 'P2') && weak.length) flags.push('Weak: ' + weak.map(v => title(v.color) + ' ' + v.grp).join(', '));
-    vs.forEach((v, i) => { v.share = ws[i] / W; });
-    designs.push({
-      design: d, score, cls, mk, flags, variants: vs.sort((a, b) => b.score - a.score),
-      sold8: vs.reduce((t, v) => t + v.recent + v.prior, 0), pending: vs.reduce((t, v) => t + v.pending, 0),
-      stock: [...new Map(vs.map(v => [v.color, v.shelfPcs])).values()].reduce((a, b) => a + b, 0), colors: [...new Set(vs.map(v => v.color))],
-    });
-  }
-  designs.sort((a, b) => b.score - a.score || a.design.localeCompare(b.design, undefined, { numeric: true }));
-  designs.forEach((x, i) => { x.rank = i + 1; });
-  return { start, asOf, designs, variants: list, all: [...V.values()] };
+  // ranks for the repeat-cutting list
+  const ranked = list.filter(v => v.status === 'eligible').sort((a, b) => b.score - a.score || a.key.localeCompare(b.key, undefined, { numeric: true }));
+  ranked.forEach((v, i) => { v.rank = i + 1; });
+  const rest = list.filter(v => v.status !== 'eligible').sort((a, b) =>
+    (b.score == null ? -1 : b.score) - (a.score == null ? -1 : a.score) || (b.conv || 0) - (a.conv || 0));
+  return { start, asOf, units: ranked.concat(rest), ranked, all: [...V.values()], checks, cut: { custVals, pendVals, speedVals, reviewCut } };
 }
 
 /* rebuilt only when the data underneath changes */
@@ -3131,85 +3218,200 @@ function prioData() {
 }
 
 const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
-function sbar(s) { return '<i class="sb5"><i style="width:' + Math.round(clamp01(s / 5) * 100) + '%"></i></i>'; }
+const nf = x => Math.round(x).toLocaleString('en-IN');
+const unitName = v => 'DES-' + v.design + ' — ' + title(v.color) + ' — ' + v.grp;
+const scoreTxt = s => s == null ? 'Insufficient Data' : f1(s);
 
-function prioVariant(v) {
-  const mom = v.prior ? Math.round((v.recent / v.prior - 1) * 100) : null;
-  const momTxt = v.recent + v.prior === 0 ? 'no sales in 8 weeks'
-    : mom == null ? 'new this month' : (mom >= 0 ? '↑ ' : '↓ ') + Math.abs(mom) + '% vs prior 4 wks';
-  const cell = (name, s, w, detail) =>
-    '<div class="pc5"><span>' + name + ' <small>' + w + '%</small></span><b>' + f1(s) + '</b>' + sbar(s) + '<small>' + detail + '</small></div>';
-  let h = '<div class="pv">' +
-    '<div class="pv-h"><b>' + esc(title(v.color)) + ' · ' + esc(v.grp) + '</b>' +
-    '<span class="pcls ' + v.cls.toLowerCase() + '">' + v.cls + ' · ' + Math.round(v.score) + '</span>' +
-    '<span class="pconf c-' + v.mk.conf + '">' + C_LABEL[v.mk.conf] + '</span>' +
-    '<span class="pv-sh">' + Math.round(v.share * 100) + '% of design demand</span></div>' +
-    '<div class="pv-g">' +
-    cell('Velocity', v.sVel, PW.vel, f1(v.weekly8) + ' pcs/wk · ' + momTxt) +
-    cell('Demand', v.sDem, PW.dem, Math.round(v.dp) + '% · ' + Math.round(v.pending) + ' pending / ' + Math.round(v.stock) + ' in stock' +
-      (v.inWider ? ' + ' + Math.round(v.inWider) + ' inside ' + v.wider.map(x => x.size).join(', ') + ' sets' : '')) +
-    cell('Cover', v.sCov, PW.cov, v.cover == null ? 'no recent sales to cover' : f1(v.cover) + ' wks · ' + Math.round(v.saleable) + ' pcs free after pending') +
-    cell('FIFO', v.sFifo, PW.fifo, Math.round(v.sellThrough * 100) + '% sold through · estimate') +
-    cell('Market', v.sMkt, PW.mkt, v.mk.customers + ' customers · ' + (v.mk.regions.join(', ') || 'no state') +
-      ' · ' + Math.round(v.mk.repRate * 100) + '% repeat · top ' + Math.round(v.mk.topShare * 100) + '%') +
+/* the plain-language reason, built from the unit's own numbers */
+function prioWhy(v) {
+  const W = PRIO_CFG.weights;
+  const lines = [];
+  lines.push(v.nCust + ' unique customer' + (v.nCust === 1 ? '' : 's') + ' bought ' + title(v.color) + ' (any size) — higher than ' + Math.min(99, Math.floor(v.pr.mkt * 100)) + '% of colours');
+  lines.push(v.pending ? nf(v.pending) + ' pcs are pending from ' + v.pendList.length + ' part' + (v.pendList.length === 1 ? 'y' : 'ies') + ' — higher than ' + Math.min(99, Math.floor(v.pr.pend * 100)) + '% of units with orders' : 'nothing is pending');
+  lines.push(v.speed == null ? 'sales speed of the first two lots cannot be judged yet'
+    : 'the first two lots took about ' + Math.round(v.speed) + ' days to sell half (estimate) — faster than ' + Math.min(99, Math.floor(v.pr.speed * 100)) + '% of units');
+  lines.push(v.conv == null ? 'production conversion cannot be worked out — no lot on record'
+    : Math.round(v.conv) + '% of initial production has been delivered or is covered by confirmed orders');
+  let head = unitName(v);
+  if (v.status === 'eligible') head += ' scored ' + Math.round(v.score) + '/100 (' + P_LABEL[v.cls] + ') because:';
+  else if (v.status === 'insufficient') head += ' could not be fully scored:';
+  else head += ' is ' + (v.status === 'review' ? 'held for manual review' : 'not eligible') + ' — it converts ' + Math.round(v.conv) + '%, under the ' + PRIO_CFG.eligibleConv + '% gate:';
+  const tail = v.concentrated ? 'Demand is concentrated: ' + v.nCust + ' customer' + (v.nCust === 1 ? '' : 's') + ', the largest taking ' + Math.round(v.topShare * 100) + '% of deliveries.'
+    : 'Market validation is broad — ' + v.nCust + ' customers, the largest taking ' + Math.round(v.topShare * 100) + '%; no concentrated-demand warning applies.';
+  return '<p class="pw-h">' + esc(head) + '</p><ul class="pw-l">' + lines.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><p class="pw-t">' + esc(tail) + '</p>';
+}
+
+function prioDetail(v, R) {
+  const W = PRIO_CFG.weights;
+  let h = '<div class="pp-d">' + prioWhy(v);
+
+  // pillars with raw metric, score and weighted points
+  const pill = (name, w, s, pts, raw) => '<div class="pc5"><span>' + name + ' <small>' + w + '%</small></span><b>' + scoreTxt(s) + (s == null ? '' : ' <small>/5 → ' + f1(pts) + ' pts</small>') + '</b>' +
+    (s == null ? '' : '<i class="sb5"><i style="width:' + Math.round(clamp01(s / 5) * 100) + '%"></i></i>') + '<small>' + raw + '</small></div>';
+  h += '<div class="pv-g">' +
+    pill('Market validation', W.mkt, v.s.mkt, v.pts.mkt, v.nCust + ' unique customers for ' + esc(title(v.color)) + ' · higher than ' + Math.min(99, Math.floor(v.pr.mkt * 100)) + '% of colours') +
+    pill('Pending orders', W.pend, v.s.pend, v.pts.pend, nf(v.pending) + ' pcs pending · higher than ' + Math.min(99, Math.floor(v.pr.pend * 100)) + '% of units with orders') +
+    pill('First-two-lot speed', W.speed, v.s.speed, v.pts.speed, v.speed == null ? 'not enough history' : '~' + Math.round(v.speed) + ' days to 50% (estimate) · faster than ' + Math.min(99, Math.floor(v.pr.speed * 100)) + '%') +
+    pill('Production conversion', W.conv, v.s.conv, v.pts.conv, v.conv == null ? 'no lot on record' : Math.round(v.conv) + '% (capped at ' + PRIO_CFG.convFull + '% for scoring)') +
     '</div>';
-  h += '<div class="pv-sf">On the shelf (' + esc(title(v.color)) + '): ' + carveText(v.shelf) + '</div>';
-  if (v.warn.length) h += '<div class="pv-w">' + v.warn.map(w => '<span>' + esc(w) + '</span>').join('') + '</div>';
-  if (v.lotList.length) {
-    h += '<div class="pl"><div class="pl-r pl-hd"><span>' + (v.lotsFrom ? esc(v.lotsFrom) + ' lots it was cut from' : 'Lot (FIFO estimate)') + '</span><span>Qty</span><span>Sold</span><span>Left</span><span>Sold %</span><span>Age</span></div>' +
-      v.lotList.map(L => '<div class="pl-r' + (L.open ? ' pl-open' : '') + '"><span>' + esc(L.lot) + (L.t ? ' <small>' + fmtDay(L.t) + '</small>' : '') +
-        (L.cut ? ' <small class="pl-cut">' + Math.round(L.cut) + ' cut</small>' : '') + '</span>' +
-        '<span>' + Math.round(L.qty) + '</span><span>' + Math.round(L.sold) + '</span><span>' + Math.round(L.left) + '</span>' +
-        '<span>' + Math.round(L.st * 100) + '%</span><span>' + (L.days != null ? 'out in ' + L.days + 'd' : L.age + 'd') + '</span></div>').join('') + '</div>';
+  h += '<div class="pd-sum">' + (v.score == null ? 'Final score: Insufficient Data' :
+    'Final score = ' + f1(v.pts.mkt) + ' + ' + f1(v.pts.pend) + ' + ' + f1(v.pts.speed) + ' + ' + f1(v.pts.conv) + ' = <b>' + Math.round(v.score) + '/100</b>') +
+    ' · ' + ST_LABEL[v.status] + (v.cls ? ' · ' + P_LABEL[v.cls] : '') + '</div>';
+
+  if (v.warn.length) h += '<div class="pv-w">' + v.warn.map(w => '<span' + (w === CONC_TXT || w.startsWith('MANUAL') ? ' class="pw-big"' : '') + '>' + esc(w) + '</span>').join('') + '</div>';
+
+  // lots
+  if (v.own.length) {
+    h += '<div class="pd-t">Lots — first two used for speed and conversion · sold figures are FIFO estimates</div>' +
+      '<div class="pl pl7"><div class="pl-r pl-hd"><span>Lot</span><span>Finished (est.)</span><span>Qty</span><span>Sold (est.)</span><span>Left</span><span>25% in</span><span>50% in</span></div>' +
+      v.own.map((L, i) => '<div class="pl-r' + (i >= 2 ? ' pl-open' : '') + '"><span>' + (i < 2 ? '<b>' + (i + 1) + '.</b> ' : '') + esc(L.lot) +
+        (L.cut ? ' <small class="pl-cut">' + Math.round(L.cut) + ' pcs cut away</small>' : '') + '</span>' +
+        '<span>' + fmtDay(L.t) + (L.cutT ? ' <small>cut ' + fmtDay(L.cutT) + '</small>' : '') + '</span>' +
+        '<span>' + nf(L.qty) + '</span><span>' + nf(L.sold) + '</span><span>' + nf(L.left) + '</span>' +
+        '<span>' + (L.d25 == null ? '—' : L.d25 + 'd') + '</span><span>' + (L.d50 == null ? '—' : L.d50 + 'd') + '</span></div>').join('') + '</div>';
+    if (v.later.length) h += '<div class="pd-n">Lots after the second are shown for reference and do not change the speed score.</div>';
   }
+
+  // conversion working
+  if (v.conv != null) {
+    let c = 'Delivered ' + nf(v.sold);
+    if (v.returns) c += ' − returns ' + nf(v.returns);
+    if (v.cutFromTot) c += ' − ' + nf(v.cutFromTot) + ' cut out of wider sets';
+    if (v.cutForTot) c += ' + ' + nf(v.cutForTot) + ' cut away for narrower sets';
+    c += ' + pending ' + nf(v.pending) + ' = ' + nf(v.convNum) + ' ÷ initial production ' +
+      v.first2.map((L, i) => 'lot ' + (i + 1) + ' ' + nf(L.qty)).join(' + ') + ' = ' + nf(v.initial) + ' → <b>' + Math.round(v.conv) + '%</b>';
+    h += '<div class="pd-t">Production conversion</div><div class="pd-c">' + c + '</div>';
+  }
+
+  // demand and stock
+  h += '<div class="pd-t">Demand and stock</div><div class="pd-c">' +
+    nf(v.sold) + ' pcs delivered in this range (actual) · ' + nf(v.pending) + ' pcs pending · stock ' + nf(v.stock) + ' pcs in ' + esc(v.grp) + ' sets' +
+    (v.inWider ? ' + ' + nf(v.inWider) + ' inside ' + v.wider.map(x => x.size).join(', ') + ' sets' : '') +
+    ' · pending is ' + Math.round(v.dp) + '% of saleable stock plus pending<br>On the shelf (' + esc(title(v.color)) + '): ' + carveText(v.shelf) + '</div>';
+
+  // customers
+  const topN = 12;
+  h += '<div class="pd-t">Customers — ' + esc(title(v.color)) + ', all sizes (' + v.nCust + ' unique, ' + nf(v.dcDelivered) + ' pcs; ' + v.unitCust + ' bought ' + esc(v.grp) + ')</div>';
+  if (v.dcCustomers.length) h += '<div class="pd-cl">' + v.dcCustomers.slice(0, topN).map(c => '<span>' + esc(c.name) + ' <b>' + nf(c.pcs) + '</b> <small>' + Math.round(100 * c.pcs / v.dcDelivered) + '%</small></span>').join('') +
+    (v.dcCustomers.length > topN ? '<span><small>+ ' + (v.dcCustomers.length - topN) + ' more</small></span>' : '') + '</div>';
+  else h += '<div class="pd-c">No deliveries yet.</div>';
+  if (v.pendList.length) h += '<div class="pd-t">Pending — ' + v.pendList.length + ' part' + (v.pendList.length === 1 ? 'y' : 'ies') + ', largest ' + nf(v.topPend) + ' pcs (not counted as customers above)</div>' +
+    '<div class="pd-cl">' + v.pendList.slice(0, topN).map(p => '<span>' + esc(p.name) + ' <b>' + nf(p.pcs) + '</b></span>').join('') + '</div>';
+  h += '<div class="pd-n">Seasonal feasibility: not checked — a high score does not mean a repeat can be finished in time for the season.</div>';
   return h + '</div>';
 }
 
 function renderPrio() {
-  const body = $('#prio-body');
+  const body = $('#prio-body'), dash = $('#prio-dash');
   if (!body) return;
-  document.querySelectorAll('[data-pclass]').forEach(b => b.classList.toggle('on', b.dataset.pclass === (S.prioClass || 'all')));
+  const setDash = x => { if (dash) dash.innerHTML = x; };
   if (!S.delRows || !S.delRows.length) {
+    setDash('');
     body.innerHTML = '<div class="empty">Paste the VastraApp delivery challan export into a tab called “' + esc(DEL_TAB) +
-      '” in your pending-order sheet, or load the file above. Stock, purchase inward and pending orders are used too.</div>';
+      '” in your pending-order sheet, or load the file above.<br>Without it these can’t be worked out: market validation, sales speed and production conversion.</div>';
     return;
   }
-  if (!S.stockRows) { body.innerHTML = '<div class="empty">Load the stock file as well — stock cover and FIFO need it.</div>'; return; }
+  const miss = [];
+  if (!S.stockRows) miss.push('stock file — needed for lot 1 (stock at the start) and the shelf');
+  if (!S.purchRows) miss.push('purchase inward — without it every unit has only one lot (stock at the start)');
+  if (!S.lines || !S.lines.length) miss.push('pending orders — pending demand counts as zero');
   const R = prioData();
-  if (!R) { body.innerHTML = '<div class="empty">No usable delivery lines were found.</div>'; return; }
+  if (!R || R.empty) { setDash(''); body.innerHTML = '<div class="empty">No usable delivery lines were found — see data checks.</div>' + prioChecksHtml(R && R.checks); return; }
 
-  const q = (S.q.prio || '').trim().toLowerCase();
-  const cls = S.prioClass || 'all';
-  const counts = { P1: 0, P2: 0, P3: 0, P4: 0 };
-  for (const d of R.designs) counts[d.cls]++;
-  const shown = R.designs.filter(d => (cls === 'all' || d.cls === cls) &&
-    hits(q, d.design, d.colors.join(' '), d.variants.flatMap(v => v.events.map(e => e.name)).join(' ')));
+  const F = S.pf;
+  const n = { all: R.units.length, eligible: 0, review: 0, not: 0, insufficient: 0, conc: 0, incomplete: 0 };
+  for (const v of R.units) { n[v.status]++; if (v.concentrated) n.conc++; if (v.status === 'insufficient' || v.warn.some(w => /check entries|no production record|below zero|duplicate/.test(w))) n.incomplete++; }
+  const tile = (num, label, cls) => '<div class="pt' + (cls ? ' ' + cls : '') + '"><b>' + nf(num) + '</b><span>' + label + '</span></div>';
+  setDash('<div class="pts">' + tile(n.all, 'combinations analysed') + tile(n.eligible, 'eligible for repeat cutting', 'good') +
+    tile(n.not + n.review, 'not eligible' + (n.review ? ' (' + n.review + ' for review)' : '')) + tile(n.conc, 'concentrated demand', 'warn') +
+    tile(n.incomplete, 'incomplete data') + '</div>' +
+    '<p class="exp">Deliveries ' + fmtDay(R.start) + ' – ' + fmtDay(R.asOf) + '. One row per design, colour and size range as VastraApp records it. ' +
+    'Stock follows the set-break rule. Lot finish dates are purchase date + ' + PRIO_CFG.fgLagDays + ' days, and lot sales are FIFO estimates. ' +
+    'Seasonal feasibility is not checked. This list picks what to repeat — it does not set quantities.</p>' +
+    (miss.length ? '<div class="note">Missing: ' + miss.map(esc).join('; ') + '.</div>' : ''));
 
-  ['all', 'P1', 'P2', 'P3', 'P4'].forEach(k => {
-    const b = document.querySelector('[data-pclass="' + k + '"]');
-    if (b) b.textContent = (k === 'all' ? 'All ' + R.designs.length : k + ' · ' + counts[k]);
-  });
+  // filter options
+  const fill = (id, vals, cur, first) => {
+    const el = $(id); if (!el) return;
+    const want = '<option value="">' + first + '</option>' + vals.map(x => '<option value="' + esc(x) + '"' + (x === cur ? ' selected' : '') + '>' + esc(id === '#pfCol' ? title(x) : x) + '</option>').join('');
+    if (el.dataset.sig !== want) { el.innerHTML = want; el.dataset.sig = want; }
+  };
+  fill('#pfCol', [...new Set(R.units.map(v => v.color))].sort(), F.col, 'All colours');
+  fill('#pfSize', [...new Set(R.units.map(v => v.grp))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), F.size, 'All sizes');
+  ['#pfCls', '#pfElig', '#pfConc'].forEach(id => { const el = $(id); const k = { '#pfCls': 'cls', '#pfElig': 'elig', '#pfConc': 'conc' }[id]; if (el && el.value !== F[k]) el.value = F[k]; });
 
-  let h = '<p class="exp">Sales from ' + fmtDay(R.start) + ' to ' + fmtDay(R.asOf) + '. Every design is scored per colour and size range as recorded in VastraApp, ' +
-    'then averaged by demand. Lot figures are FIFO estimates — deliveries are not linked to lots. ' +
-    'This ranks designs for attention; it does not set repeat quantities.</p>';
-  if (!S.purchRows) h += '<div class="note">No purchase inward file loaded, so every lot counts as older stock and FIFO scores are rough.</div>';
-  if (!shown.length) h += '<div class="empty">Nothing matches.</div>';
+  const q = (S.q.prio || '').trim().toLowerCase().replace(/^des-?/, '');
+  const shown = R.units.filter(v =>
+    (F.elig === 'all' || v.status === F.elig) &&
+    (F.cls === 'all' || v.cls === F.cls) &&
+    (!F.col || v.color === F.col) && (!F.size || v.grp === F.size) &&
+    (F.conc === 'all' || (F.conc === 'yes') === v.concentrated) &&
+    (!q || v.design.toLowerCase().includes(q)));
 
-  for (const d of shown) {
-    const open = S.openPrio.has(d.design);
-    h += '<div class="pp' + (open ? ' open' : '') + '" data-prio="' + esc(d.design) + '">' +
-      '<div class="pp-h"><span class="pp-r">#' + d.rank + '</span><b>DES-' + esc(d.design) + '</b>' +
-      '<span class="pcls ' + d.cls.toLowerCase() + '">' + d.cls + '</span>' +
-      '<span class="pconf c-' + d.mk.conf + '">' + C_LABEL[d.mk.conf] + '</span>' +
-      '<span class="pp-s">' + Math.round(d.score) + '</span></div>' +
-      '<div class="pp-m">' + Math.round(d.sold8) + ' pcs sold in 8 wks · ' + Math.round(d.pending) + ' pending · ' +
-      Math.round(d.stock) + ' in stock · ' + d.mk.customers + ' customers · ' + d.variants.length + ' variant' + (d.variants.length === 1 ? '' : 's') + '</div>' +
-      (d.flags.length ? '<div class="pp-f">' + d.flags.map(f => '<span>' + esc(f) + '</span>').join('') + '</div>' : '');
-    if (open) h += '<div class="pp-d">' + d.variants.map(prioVariant).join('') + '</div>';
-    h += '</div>';
+  const heads = ['Rank', 'Design', 'Colour', 'Size', 'Lot 1', 'Lot 2', 'Initial prod.', 'Delivered', 'Pending', 'Conversion', 'Customers',
+    'Market /5', 'Pending /5', 'Speed /5', 'Conversion /5', 'Score', 'Category', 'Warnings', 'Recommendation'];
+  let h = '<div class="hit">' + shown.length + ' shown · ' + (F.elig === 'eligible' ? 'repeat cutting list, highest score first' : ST_LABEL[F.elig] || 'all statuses') + '</div>';
+  if (!shown.length) h += '<div class="empty">Nothing matches these filters.</div>';
+  else {
+    h += '<div class="tw ptw"><table class="ptab"><thead><tr>' + heads.map((x, i) => '<th' + (i >= 4 && i <= 15 ? ' class="n"' : '') + '>' + x + '</th>').join('') + '</tr></thead><tbody>';
+    for (const v of shown) {
+      const open = S.openPrio.has(v.key);
+      const L1 = v.first2[0], L2 = v.first2[1];
+      const sc = s => '<td class="n">' + (s == null ? '<small>n/a</small>' : f1(s)) + '</td>';
+      h += '<tr class="prow' + (open ? ' open' : '') + '" data-prio="' + esc(v.key) + '">' +
+        '<td>' + (v.rank || '—') + '</td><td><b>' + esc(v.design) + '</b></td><td>' + esc(title(v.color)) + '</td><td>' + esc(v.grp) + '</td>' +
+        '<td class="n">' + (L1 ? nf(L1.qty) : '—') + '</td><td class="n">' + (L2 ? nf(L2.qty) : '—') + '</td><td class="n">' + (v.initial ? nf(v.initial) : '—') + '</td>' +
+        '<td class="n">' + nf(v.sold) + '</td><td class="n">' + nf(v.pending) + '</td>' +
+        '<td class="n">' + (v.conv == null ? '—' : Math.round(v.conv) + '%') + '</td><td class="n">' + v.nCust + '</td>' +
+        sc(v.s.mkt) + sc(v.s.pend) + sc(v.s.speed) + sc(v.s.conv) +
+        '<td class="n"><b>' + (v.score == null ? '<small>n/a</small>' : Math.round(v.score)) + '</b></td>' +
+        '<td>' + (v.cls ? '<span class="pcls ' + v.cls.toLowerCase() + '">' + v.cls + '</span>' : '<small>' + ST_LABEL[v.status] + '</small>') + '</td>' +
+        '<td class="pwc">' + (v.concentrated ? '<span class="pcon">Concentrated</span> ' : '') + (v.warn.length - (v.concentrated ? 1 : 0) > 0 ? '<small>' + (v.warn.length - (v.concentrated ? 1 : 0)) + ' more</small>' : '') + '</td>' +
+        '<td class="prc">' + esc(v.rec) + '</td></tr>';
+      if (open) h += '<tr class="pdrow"><td colspan="' + heads.length + '"><div class="pd-in">' + prioDetail(v, R) + '</div></td></tr>';
+    }
+    h += '</tbody></table></div>';
   }
+  h += prioHowHtml(R) + prioChecksHtml(R.checks);
   body.innerHTML = h;
+  prioFit();
+}
+
+/* keep an opened row's details inside the visible width while the table scrolls sideways */
+function prioFit() {
+  const w = document.querySelector('#prio-body .ptw');
+  if (w) w.style.setProperty('--pw', (w.clientWidth - 2) + 'px');
+}
+window.addEventListener('resize', prioFit);
+
+function prioHowHtml(R) {
+  const C = PRIO_CFG, W = C.weights;
+  return '<details class="pdx"><summary>How the score works</summary><div class="pd-c">' +
+    '<b>Stage 1 — eligibility.</b> Production conversion = (net delivered + confirmed pending) ÷ (lot 1 + lot 2). At ' + C.eligibleConv + '% or more a unit is eligible; below that it is left off the list, ' +
+    'or held for manual review when one party’s pending is among the top ' + Math.round((1 - C.reviewPctile) * 100) + '% of single orders (currently ' + (isFinite(R.cut.reviewCut) ? nf(R.cut.reviewCut) + ' pcs or more' : 'none') + ').<br>' +
+    '<b>Stage 2 — ranking</b>, out of 100: Market validation ' + W.mkt + '% · Pending orders ' + W.pend + '% · First-two-lot speed ' + W.speed + '% · Production conversion ' + W.conv + '%. Points = score ÷ 5 × weight.<br>' +
+    '<b>Market, pending and speed</b> are scored against every comparable unit in this data: 5 × the share of units it beats (ties count half). ' +
+    'Market counts unique customers per design-colour from deliveries only; pending counts pieces; speed is days from a lot’s finish to 50% sold, quantity-weighted over the first two lots (faster scores higher). ' +
+    'A lot under ' + C.newLotGraceDays + ' days old that has not reached 50% is left out rather than penalised.<br>' +
+    '<b>Conversion</b> scores 5 × conversion ÷ ' + C.convFull + '%, capped at 5.<br>' +
+    '<b>Classes:</b> P1 80–100 · P2 65–79 · P3 45–64 · P4 below 45. ' + CONC_TXT.toLowerCase() + ' is shown, never used to disqualify.<br>' +
+    '<b>Lots:</b> lot 1 is the stock on hand on ' + fmtDay(R.start) + ' when there was any; then purchase inward lots by Challan No, finished date estimated as purchase date + ' + C.fgLagDays + ' days. ' +
+    'Set-break rule: a sale its own range cannot cover is taken out of a wider range’s lot (a 0-3 out of a 0-8 leaves its 4-8).<br>' +
+    'All thresholds sit in PRIO_CFG at the top of the priority code.</div></details>';
+}
+
+function prioChecksHtml(c) {
+  if (!c) return '';
+  const list = (rows, max) => rows.slice(0, max).map(x => '<li>Row ' + x.row + ': ' + esc(x.why || ('same as row ' + x.first)) + ' <small>' + esc(x.what) + '</small></li>').join('') +
+    (rows.length > max ? '<li><small>+ ' + (rows.length - max) + ' more</small></li>' : '');
+  const bad = c.del.issues.length + c.pur.issues.length + c.dupes.length;
+  return '<details class="pdx"' + '><summary>Data checks' + (bad ? ' — ' + bad + ' row' + (bad === 1 ? '' : 's') + ' to look at' : ' — all clear') + '</summary><div class="pd-c">' +
+    'Delivery challans: ' + nf(c.del.rows) + ' rows, ' + nf(c.del.used) + ' used, ' + c.del.issues.length + ' skipped' + (c.dupes.length ? ', ' + c.dupes.length + ' repeats' : '') + '.' +
+    (c.del.issues.length ? '<ul class="pck">' + list(c.del.issues, 30) + '</ul>' : '') +
+    (c.dupes.length ? '<br>Exact repeats of an earlier line (same challan, order, party, item, qty and date) — counted once: ' + c.dupes.length + '<ul class="pck">' + list(c.dupes, 30) + '</ul>' : '') +
+    '<br>Purchase inward: ' + nf(c.pur.rows) + ' rows, ' + nf(c.pur.used) + ' used.' +
+    (c.pur.issues.length ? '<ul class="pck">' + list(c.pur.issues, 30) + '</ul>' : '') +
+    '</div></details>';
 }
 
 /* ---------- parties drawer ---------- */
@@ -3296,18 +3498,19 @@ $('#exportBtn').addEventListener('click', async () => {
     'Allotted Sets': l.sets, 'Allotted Pcs': l.sets * l.per,
   });
   if (ma.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ma), 'Allotment');
-  const PR = S.delRows && S.stockRows ? prioData() : null;
-  if (PR) {
-    const pr = [];
-    for (const d of PR.designs) for (const v of d.variants) pr.push({
-      'Rank': d.rank, 'Design Name': 'DES-' + d.design, 'Design Score': Math.round(d.score), 'Design Class': d.cls,
-      'Market Confidence': C_LABEL[d.mk.conf], 'Colour': title(v.color), 'Size': v.grp,
-      'Variant Score': Math.round(v.score), 'Variant Class': v.cls,
-      'Velocity /5': +f1(v.sVel), 'Demand /5': +f1(v.sDem), 'Cover /5': +f1(v.sCov), 'FIFO /5': +f1(v.sFifo), 'Market /5': +f1(v.sMkt),
-      'Sold 8 wks (pcs)': Math.round(v.recent + v.prior), 'Pending (pcs)': Math.round(v.pending), 'Stock (pcs)': Math.round(v.stock),
-      'Cover (wks)': v.cover == null ? '' : +f1(v.cover), 'Customers': v.mk.customers, 'Top customer %': Math.round(v.mk.topShare * 100),
-      'Flags': d.flags.join('; '), 'Warnings': v.warn.join('; '),
-    });
+  const PR = S.delRows && S.delRows.length ? prioData() : null;
+  if (PR && !PR.empty) {
+    const pr = PR.units.map(v => ({
+      'Rank': v.rank || '', 'Design Number': 'DES-' + v.design, 'Colour': title(v.color), 'Size Group': v.grp,
+      'First Lot Quantity': v.first2[0] ? Math.round(v.first2[0].qty) : '', 'Second Lot Quantity': v.first2[1] ? Math.round(v.first2[1].qty) : '',
+      'Total Initial Production': v.initial ? Math.round(v.initial) : '', 'Delivered Quantity': Math.round(v.sold), 'Pending Quantity': Math.round(v.pending),
+      'Production Conversion %': v.conv == null ? 'Insufficient Data' : Math.round(v.conv), 'Unique Customers': v.nCust,
+      'Market Validation Score': +f1(v.s.mkt), 'Pending Demand Score': +f1(v.s.pend),
+      'First-Two-Lot Sales Speed Score': v.s.speed == null ? 'Insufficient Data' : +f1(v.s.speed),
+      'Production Conversion Score': v.s.conv == null ? 'Insufficient Data' : +f1(v.s.conv),
+      'Final Priority Score': v.score == null ? 'Insufficient Data' : Math.round(v.score), 'Priority Category': v.cls || '',
+      'Eligibility': ST_LABEL[v.status], 'Warnings': v.warn.join('; '), 'Recommendation': v.rec,
+    }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pr), 'Production Priority');
   }
   XLSX.writeFile(wb, 'Pending-Allotment-' + new Date().toISOString().slice(0, 10) + '.xlsx');
@@ -3394,6 +3597,14 @@ wireSearch('qDesign', 'clrDesign', 'design', renderDesign);
 wireSearch('qAllot', 'clrAllot', 'allot', renderAllot);
 wireSearch('qProd', 'clrProd', 'prod', renderProduction);
 wireSearch('qPrio', 'clrPrio', 'prio', renderPrio);
+[['pfElig', 'elig'], ['pfCls', 'cls'], ['pfCol', 'col'], ['pfSize', 'size'], ['pfConc', 'conc']].forEach(([id, k]) => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', () => {
+    S.pf[k] = el.value;
+    if (k === 'cls' && el.value !== 'all' && S.pf.elig !== 'eligible') { S.pf.elig = 'eligible'; }   // categories exist only on the list
+    renderPrio();
+  });
+});
 $('#fJobs').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadJobFile(f); e.target.value = ''; });
 
 $('#ageDays').addEventListener('change', rebuild);
