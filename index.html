@@ -234,7 +234,9 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
 .pq-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:12px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.03em}
 .pq-h b{font-size:18px;color:var(--ink);letter-spacing:0;text-transform:none}.pq-h b small{font-size:12px;color:var(--ink-2);font-weight:500}
 .pq-c{font-size:13.5px;line-height:1.5;margin:3px 0 5px}
-.pq-n{font-size:12px;color:var(--ink-2);line-height:1.45}
+.pq-n{font-size:12px;color:var(--ink-2);line-height:1.45;margin:2px 0 3px}
+.pl4 .pl-r{grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr))}
+.pl-tot{font-weight:700;border-top:1px solid var(--rule)}
 .pts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:12px 0 8px}
 .pt{background:var(--card);border:1px solid var(--rule);border-radius:4px;padding:9px 11px;display:flex;flex-direction:column;gap:2px}
 .pt b{font-size:21px;letter-spacing:-.02em;color:var(--ink)}.pt span{font-size:12px;color:var(--ink-2);line-height:1.3}
@@ -312,8 +314,8 @@ p.exp{color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:74ch}
 
 <header class="top">
   <h1>Pending &amp; Allotment</h1>
-  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v11.0 TEST</span>
-  <span class="chip" id="build">build 11.0</span>
+  <span class="ver" style="background:#c0392b;color:#fff;padding:1px 6px;border-radius:4px">v11.1 TEST</span>
+  <span class="chip" id="build">build 11.1</span>
   <span class="chip" id="chip" title="Set Tracker connection">local</span>
 </header>
 <p class="sub-t">Your two pending reports, with stock already allotted against them.</p>
@@ -2845,11 +2847,11 @@ function adjust(key, d) {
 }
 
 /* ---------- production priority ----------
-   One ranked table: every design · colour · size range (as VastraApp records it)
-   gets four scores from 1 to 5, weighted equally, out of 20 in all:
-     sell-through      sold ÷ (sold + stock now)
-     unique customers  parties who took delivery of it
-     repeat customers  share of those parties who came back on another challan
+   One ranked table: every design · colour, all sizes added together, gets four
+   scores from 1 to 5, weighted equally, out of 20 in all:
+     sell-through      (sold + pending) ÷ (sold + stock now)
+     unique customers  parties who bought + parties with pending orders, each once
+     repeat customers  share of buyers who came back on another challan
      pending orders    pieces still on order
    Each score ranks the item against all the others. Zero scores 1; items with any
    value are ranked into four equal groups: bottom quarter 2, then 3, 4, top quarter 5.
@@ -2933,12 +2935,14 @@ function prioChecks() {
 
 function prioBuild() {
   const checks = prioChecks();
-  const V = new Map();
-  const vget = (d, c, g) => {
-    const k = d + '|' + c + '|' + g;
-    if (!V.has(k)) V.set(k, { key: k, design: d, color: c, grp: g, events: [], pending: 0, pendBy: new Map(), lots: new Map(), stock: 0 });
-    return V.get(k);
+  // gathered per size range first, then combined per design · colour
+  const U = new Map();
+  const uget = (d, c) => {
+    const k = d + '|' + c;
+    if (!U.has(k)) U.set(k, { key: k, design: d, color: c, events: [], pending: 0, pendBy: new Map(), lots: new Map(), bySize: new Map() });
+    return U.get(k);
   };
+  const sget = (u, g) => { if (!u.bySize.has(g)) u.bySize.set(g, { g, sold: 0, pending: 0, stock: 0 }); return u.bySize.get(g); };
   const rangeOf = raw => { const sz = expandSize(raw); return sz ? rangeLabel(sz) : null; };
 
   // deliveries, as recorded
@@ -2950,35 +2954,38 @@ function prioBuild() {
     const name = String(r['Customer Name'] || '').trim();
     if (!d || !c || !g || !(q > 0) || !t || !name) return;
     start = Math.min(start, t); asOf = Math.max(asOf, t);
-    vget(d, c, g).events.push({ t, pcs: q, cust: custKey(name), name: normCust(name), challan: String(r['Delivery Challan Number'] || '').trim() || ('row ' + i) });
+    const u = uget(d, c);
+    u.events.push({ t, pcs: q, g, cust: custKey(name), name: normCust(name), challan: String(r['Delivery Challan Number'] || '').trim() || ('row ' + i) });
+    sget(u, g).sold += q;
   });
   if (!isFinite(start)) return { checks, empty: true };
 
   // pending orders, as recorded
   for (const ln of (S.lines || [])) {
     if (!(ln.qty > 0)) continue;
-    const v = vget(ln.design, ln.color, rangeLabel(ln.sizes));
-    v.pending += ln.qty;
-    const p = v.pendBy.get(ln.ckey) || { name: ln.customer, pcs: 0 };
-    p.pcs += ln.qty; v.pendBy.set(ln.ckey, p);
+    const u = uget(ln.design, ln.color);
+    u.pending += ln.qty;
+    sget(u, rangeLabel(ln.sizes)).pending += ln.qty;
+    const p = u.pendBy.get(ln.ckey) || { name: ln.customer, pcs: 0 };
+    p.pcs += ln.qty; u.pendBy.set(ln.ckey, p);
   }
 
-  // production: purchase inward lots (by Challan No), any date — only attached to items above
+  // production: purchase inward lots by Challan No, all sizes of the colour together
   for (const r of (S.purchRows || [])) {
     const d = stripDes(r['Design Name Without Prefix'] || r['Design Number']); const c = normColor(r['Color']);
     const g = rangeOf(r['Size']); const q = Number(r['Quantity'] || 0); const t = anyDate(r['Purchase Date']);
     if (!d || !c || !g || !(q > 0) || !t) continue;
-    const v = V.get(d + '|' + c + '|' + g); if (!v) continue;
+    const u = U.get(d + '|' + c); if (!u) continue;
     const id = lotId(r['Challan No']);
     const lk = id || ('no challan no.@' + t);
-    const L = v.lots.get(lk) || { lot: id || 'no challan no.', t, qty: 0 };
-    L.qty += q; L.t = Math.min(L.t, t); v.lots.set(lk, L);
+    const L = u.lots.get(lk) || { lot: id || 'no challan no.', t, qty: 0, sizes: new Map() };
+    L.qty += q; L.t = Math.min(L.t, t); L.sizes.set(g, (L.sizes.get(g) || 0) + q); u.lots.set(lk, L);
   }
 
-  // stock now, by the set-break rule
+  // stock now, by the set-break rule: every range of the colour netted size by size
   const C = new Map();
   const cget = dc => { if (!C.has(dc)) C.set(dc, { ranges: new Map(), negs: [] }); return C.get(dc); };
-  for (const v of V.values()) cget(v.design + '|' + v.color).ranges.set(v.grp, expandSize(v.grp));
+  for (const u of U.values()) for (const g of u.bySize.keys()) cget(u.key).ranges.set(g, expandSize(g));
   for (const r of (S.stockRows || [])) {
     const sz = expandSize(r['Size']); if (!sz) continue;
     const dc = stripDes(r['Design Name']) + '|' + normColor(r['Color Name']);
@@ -2988,46 +2995,51 @@ function prioBuild() {
   const netted = S.netted || (S.stockRows ? netStock(S.stockRows, { stockColumn: 'Current Stock' }).stock : new Map());
   for (const [dc, cc] of C) cc.shelf = carve(netted.get(dc) || {}, withComplements([...cc.ranges.values()], cc.negs));
 
-  // raw figures per item
-  const list = [...V.values()].filter(v => v.events.length || v.pending > 0);
-  for (const v of list) {
-    const cc = C.get(v.design + '|' + v.color);
-    const sz = expandSize(v.grp) || [];
-    const own = cc.shelf.sets.find(x => x.size === v.grp);
-    v.stock = own ? own.pcs : 0;
-    v.wider = cc.shelf.sets.filter(x => { const w = expandSize(x.size) || []; return w.length > sz.length && sz.every(s => w.includes(s)); })
-      .map(x => ({ size: x.size, pcs: x.sets * sz.length }));
-    v.shelf = cc.shelf;
+  // raw figures per design · colour
+  const list = [...U.values()].filter(u => u.events.length || u.pending > 0);
+  for (const u of list) {
+    const shelf = C.get(u.key).shelf;
+    u.shelf = shelf;
+    for (const x of shelf.sets) sget(u, x.size).stock += x.pcs;
+    u.loose = shelf.loose.reduce((t, x) => t + x.pcs, 0);
+    u.stock = shelf.sets.reduce((t, x) => t + x.pcs, 0) + u.loose;
+    u.sizeRows = [...u.bySize.values()].sort((a, b) => a.g.localeCompare(b.g, undefined, { numeric: true }));
+    u.sizes = u.sizeRows.filter(s => s.sold || s.pending).map(s => s.g);
 
-    v.sold = v.events.reduce((t, e) => t + e.pcs, 0);
-    v.st = v.sold + v.stock > 0 ? v.sold / (v.sold + v.stock) : 0;
+    u.sold = u.events.reduce((t, e) => t + e.pcs, 0);
+    u.stDen = u.sold + u.stock;
+    u.st = u.stDen > 0 ? (u.sold + u.pending) / u.stDen : 0;
 
     const byCust = new Map();
-    for (const e of v.events) {
-      const c = byCust.get(e.cust) || { name: e.name, pcs: 0, challans: new Set() };
+    for (const e of u.events) {
+      const c = byCust.get(e.cust) || { key: e.cust, name: e.name, pcs: 0, challans: new Set() };
       c.pcs += e.pcs; c.challans.add(e.challan); byCust.set(e.cust, c);
     }
-    v.custList = [...byCust.values()].map(c => ({ name: c.name, pcs: c.pcs, n: c.challans.size })).sort((a, b) => b.pcs - a.pcs);
-    v.nCust = v.custList.length;
-    v.repeaters = v.custList.filter(c => c.n >= 2);
-    v.rep = v.nCust ? v.repeaters.length / v.nCust : 0;
+    u.custList = [...byCust.values()].map(c => ({ key: c.key, name: c.name, pcs: c.pcs, n: c.challans.size })).sort((a, b) => b.pcs - a.pcs);
+    u.pendList = [...u.pendBy.entries()].map(([k, p]) => ({ key: k, name: p.name, pcs: p.pcs })).sort((a, b) => b.pcs - a.pcs);
+    const all = new Set(u.custList.map(c => c.key).concat(u.pendList.map(p => p.key)));
+    u.nBought = u.custList.length;
+    u.nPend = u.pendList.length;
+    u.nBoth = u.pendList.filter(p => byCust.has(p.key)).length;
+    u.nCust = all.size;                                  // each party once, whether bought, pending or both
+    u.repeaters = u.custList.filter(c => c.n >= 2);
+    u.rep = u.nBought ? u.repeaters.length / u.nBought : 0;
 
-    v.pendList = [...v.pendBy.values()].sort((a, b) => b.pcs - a.pcs);
-    v.lotList = [...v.lots.values()].sort((a, b) => b.t - a.t);
-    v.last = v.lotList[0] || null;
+    u.lotList = [...u.lots.values()].sort((a, b) => b.t - a.t);
+    u.last = u.lotList[0] || null;
   }
 
-  // 1–5 for each, ranked against every item
-  const vals = { st: v => v.st, cust: v => v.nCust, rep: v => v.rep, pend: v => v.pending };
+  // 1–5 for each, ranked against every design · colour
+  const vals = { st: u => u.st, cust: u => u.nCust, rep: u => u.rep, pend: u => u.pending };
   const nz = {}, cuts = {};
   for (const k in vals) { nz[k] = list.map(vals[k]).filter(x => x > 0).sort((a, b) => a - b); cuts[k] = bandCuts(nz[k]); }
-  for (const v of list) {
-    v.sc = {};
-    for (const k in vals) v.sc[k] = band(vals[k](v), nz[k]);
-    v.score = v.sc.st + v.sc.cust + v.sc.rep + v.sc.pend;
+  for (const u of list) {
+    u.sc = {};
+    for (const k in vals) u.sc[k] = band(vals[k](u), nz[k]);
+    u.score = u.sc.st + u.sc.cust + u.sc.rep + u.sc.pend;
   }
   list.sort((a, b) => b.score - a.score || b.pending - a.pending || b.sold - a.sold || a.key.localeCompare(b.key, undefined, { numeric: true }));
-  list.forEach((v, i) => { v.rank = i + 1; });
+  list.forEach((u, i) => { u.rank = i + 1; });
   return { start, asOf, units: list, checks, cuts };
 }
 
@@ -3048,38 +3060,45 @@ function scaleTxt(c, f) {
   c.forEach((x, i) => { if (x != null) parts.push((i + 2) + ' from ' + f(x)); });
   return parts.join(', ') || 'nothing above zero yet';
 }
-function prioDetail(v) {
+function prioDetail(u) {
   const row = (name, calc, s, extra) => '<div class="pq"><div class="pq-h"><span>' + name + '</span><b>' + s + '<small>/5</small></b></div>' +
     '<div class="pq-c">' + calc + '</div>' + (extra || '') + '</div>';
   const chips = (arr, f) => '<div class="pd-cl">' + arr.slice(0, 12).map(f).join('') + (arr.length > 12 ? '<span><small>+ ' + (arr.length - 12) + ' more</small></span>' : '') + '</div>';
   const C = PRIO_PAGE.cuts, fmt = PRIO_FMT;
-  const better = k => 'scale: ' + scaleTxt(C[k], fmt[k]);
+  const scale = k => 'scale: ' + scaleTxt(C[k], fmt[k]);
 
   let h = '<div class="pp-d">';
+  // every size of the colour, side by side
+  h += '<div class="pd-t">All sizes of ' + esc(title(u.color)) + '</div><div class="pl pl4"><div class="pl-r pl-hd"><span>Size</span><span>Sold</span><span>Pending</span><span>Stock now</span></div>' +
+    u.sizeRows.map(s => '<div class="pl-r"><span>' + esc(s.g.includes('-') ? s.g : 'size ' + s.g + ' (single pcs)') + '</span><span>' + nf(s.sold) + '</span><span>' + nf(s.pending) + '</span><span>' + nf(s.stock) + '</span></div>').join('') +
+    (u.loose ? '<div class="pl-r"><span>loose pcs</span><span></span><span></span><span>' + nf(u.loose) + '</span></div>' : '') +
+    '<div class="pl-r pl-tot"><span>Total</span><span>' + nf(u.sold) + '</span><span>' + nf(u.pending) + '</span><span>' + nf(u.stock) + '</span></div></div>' +
+    '<div class="pq-n">Stock is read with the set-break rule: ' + carveText(u.shelf) + '</div>';
+
   h += row('Sell-through',
-    v.sold + v.stock > 0
-      ? 'Sold ' + nf(v.sold) + ' ÷ (sold ' + nf(v.sold) + ' + stock now ' + nf(v.stock) + ') = <b>' + pctTxt(v.st) + '</b>' + (v.sold ? ' · ' + better('st') : ' · nothing sold scores 1')
-      : 'Nothing sold and no stock yet — scores 1',
-    v.sc.st,
-    '<div class="pq-n">Stock now is complete ' + esc(v.grp) + ' sets on the shelf' + (v.wider.length ? '; another ' + v.wider.map(x => nf(x.pcs) + ' pcs sit inside ' + x.size + ' sets').join(', ') : '') +
-    ' · On the shelf (' + esc(title(v.color)) + '): ' + carveText(v.shelf) + '</div>');
+    u.stDen > 0
+      ? '(sold ' + nf(u.sold) + ' + pending ' + nf(u.pending) + ') ÷ (sold ' + nf(u.sold) + ' + stock now ' + nf(u.stock) + ') = ' +
+        nf(u.sold + u.pending) + ' ÷ ' + nf(u.stDen) + ' = <b>' + pctTxt(u.st) + '</b> · ' + scale('st')
+      : 'Nothing sold and no stock yet, so it can’t be worked out — scores 1',
+    u.sc.st);
   h += row('Unique customers',
-    '<b>' + v.nCust + '</b> part' + (v.nCust === 1 ? 'y' : 'ies') + ' took delivery of ' + esc(v.grp) + (v.nCust ? ' · ' + better('cust') : ' · none scores 1'),
-    v.sc.cust,
-    v.nCust ? chips(v.custList, c => '<span>' + esc(c.name) + ' <b>' + nf(c.pcs) + '</b></span>') : '');
+    '<b>' + u.nCust + '</b> part' + (u.nCust === 1 ? 'y' : 'ies') + ': ' + u.nBought + ' bought + ' + u.nPend + ' with pending orders' +
+      (u.nBoth ? ' − ' + u.nBoth + ' in both (counted once)' : '') + (u.nCust ? ' · ' + scale('cust') : ' · none scores 1'),
+    u.sc.cust,
+    (u.custList.length ? '<div class="pq-n">Bought</div>' + chips(u.custList, c => '<span>' + esc(c.name) + ' <b>' + nf(c.pcs) + '</b></span>') : '') +
+    (u.pendList.length ? '<div class="pq-n">Pending</div>' + chips(u.pendList, p => '<span>' + esc(p.name) + ' <b>' + nf(p.pcs) + '</b></span>') : ''));
   h += row('Repeat customers',
-    v.nCust ? '<b>' + v.repeaters.length + '</b> of ' + v.nCust + ' bought on 2 or more challans = <b>' + pctTxt(v.rep) + '</b>' + (v.rep ? ' · ' + better('rep') : ' · none came back, scores 1')
-      : 'No customers yet — scores 1',
-    v.sc.rep,
-    v.repeaters.length ? chips(v.repeaters, c => '<span>' + esc(c.name) + ' <b>' + c.n + ' challans</b></span>') : '');
+    u.nBought ? '<b>' + u.repeaters.length + '</b> of ' + u.nBought + ' buyers took this colour on 2 or more challans = <b>' + pctTxt(u.rep) + '</b>' + (u.rep ? ' · ' + scale('rep') : ' · none came back, scores 1')
+      : 'No deliveries yet — scores 1',
+    u.sc.rep,
+    u.repeaters.length ? chips(u.repeaters, c => '<span>' + esc(c.name) + ' <b>' + c.n + ' challans</b></span>') : '');
   h += row('Pending orders',
-    v.pending ? '<b>' + nf(v.pending) + '</b> pcs pending from ' + v.pendList.length + ' part' + (v.pendList.length === 1 ? 'y' : 'ies') + ' · ' + better('pend') : 'Nothing pending — scores 1',
-    v.sc.pend,
-    v.pendList.length ? chips(v.pendList, p => '<span>' + esc(p.name) + ' <b>' + nf(p.pcs) + '</b></span>') : '');
-  h += '<div class="pd-sum">Total = ' + v.sc.st + ' + ' + v.sc.cust + ' + ' + v.sc.rep + ' + ' + v.sc.pend + ' = <b>' + v.score + ' / 20</b></div>';
-  if (v.lotList.length) h += '<div class="pd-t">Production (purchase inward, latest first)</div><div class="pd-cl">' +
-    v.lotList.map(L => '<span>' + esc(L.lot) + ' · ' + fmtDay(L.t) + ' <b>' + nf(L.qty) + ' pcs</b></span>').join('') + '</div>';
-  else h += '<div class="pd-n">No purchase inward lot on record for ' + esc(v.grp) + '.</div>';
+    u.pending ? '<b>' + nf(u.pending) + '</b> pcs pending across all sizes from ' + u.nPend + ' part' + (u.nPend === 1 ? 'y' : 'ies') + ' · ' + scale('pend') : 'Nothing pending — scores 1',
+    u.sc.pend);
+  h += '<div class="pd-sum">Total = ' + u.sc.st + ' + ' + u.sc.cust + ' + ' + u.sc.rep + ' + ' + u.sc.pend + ' = <b>' + u.score + ' / 20</b></div>';
+  if (u.lotList.length) h += '<div class="pd-t">Production (purchase inward, latest first)</div><div class="pd-cl">' +
+    u.lotList.map(L => '<span>' + esc(L.lot) + ' · ' + fmtDay(L.t) + ' <b>' + nf(L.qty) + ' pcs</b> <small>' + [...L.sizes].map(([g, q]) => g + ': ' + nf(q)).join(', ') + '</small></span>').join('') + '</div>';
+  else h += '<div class="pd-n">No purchase inward lot on record for this colour.</div>';
   return h + '</div>';
 }
 
@@ -3097,11 +3116,11 @@ function renderPrio() {
   if (R && !R.empty) PRIO_PAGE = R;
   if (!R || R.empty) { setDash(''); body.innerHTML = '<div class="empty">No usable delivery lines were found — see data checks.</div>' + prioChecksHtml(R && R.checks); return; }
   const miss = [];
-  if (!S.stockRows) miss.push('stock file — stock now counts as zero, so sell-through reads 100%');
+  if (!S.stockRows) miss.push('stock file — stock now counts as zero');
   if (!S.purchRows) miss.push('purchase inward — last production is blank');
   if (!S.lines || !S.lines.length) miss.push('pending orders — pending counts as zero');
-  setDash('<p class="exp">Deliveries ' + fmtDay(R.start) + ' – ' + fmtDay(R.asOf) + '. Each item gets 1–5 for sell-through, unique customers, repeat customers and pending orders, ' +
-    'ranked against all ' + R.units.length + ' items. Equal weight, out of 20. Tap a row for the working.</p>' +
+  setDash('<p class="exp">Deliveries ' + fmtDay(R.start) + ' – ' + fmtDay(R.asOf) + '. One row per design colour, all sizes together. Each gets 1–5 for sell-through, unique customers, repeat customers and pending orders, ' +
+    'ranked against all ' + R.units.length + ' colours. Equal weight, out of 20. Tap a row for the working.</p>' +
     (miss.length ? '<div class="note">Missing: ' + miss.map(esc).join('; ') + '.</div>' : ''));
 
   const F = S.pf;
@@ -3110,23 +3129,23 @@ function renderPrio() {
     const want = '<option value="">' + first + '</option>' + vals.map(x => '<option value="' + esc(x) + '"' + (x === cur ? ' selected' : '') + '>' + esc(id === '#pfCol' ? title(x) : x) + '</option>').join('');
     if (el.dataset.sig !== want) { el.innerHTML = want; el.dataset.sig = want; }
   };
-  fill('#pfCol', [...new Set(R.units.map(v => v.color))].sort(), F.col, 'All colours');
-  fill('#pfSize', [...new Set(R.units.map(v => v.grp))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), F.size, 'All sizes');
+  fill('#pfCol', [...new Set(R.units.map(u => u.color))].sort(), F.col, 'All colours');
+  fill('#pfSize', [...new Set(R.units.flatMap(u => u.sizes))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), F.size, 'All sizes');
 
   const q = (S.q.prio || '').trim().toLowerCase().replace(/^des-?/, '');
-  const shown = R.units.filter(v => (!F.col || v.color === F.col) && (!F.size || v.grp === F.size) && (!q || v.design.toLowerCase().includes(q)));
+  const shown = R.units.filter(u => (!F.col || u.color === F.col) && (!F.size || u.sizes.includes(F.size)) && (!q || u.design.toLowerCase().includes(q)));
   const heads = ['Rank', 'Design Name', 'Color', 'Size', 'Last Production Qty', 'Date of Last Production', 'Score'];
-  let h = '<div class="hit">' + shown.length + ' of ' + R.units.length + ' items</div>';
+  let h = '<div class="hit">' + shown.length + ' of ' + R.units.length + ' design colours</div>';
   if (!shown.length) h += '<div class="empty">Nothing matches.</div>';
   else {
     h += '<div class="tw ptw"><table class="ptab"><thead><tr>' + heads.map((x, i) => '<th' + (i === 4 || i === 6 ? ' class="n"' : '') + '>' + x + '</th>').join('') + '</tr></thead><tbody>';
-    for (const v of shown) {
-      const open = S.openPrio.has(v.key);
-      h += '<tr class="prow' + (open ? ' open' : '') + '" data-prio="' + esc(v.key) + '">' +
-        '<td>' + v.rank + '</td><td><b>DES-' + esc(v.design) + '</b></td><td>' + esc(title(v.color)) + '</td><td>' + esc(v.grp) + '</td>' +
-        '<td class="n">' + (v.last ? nf(v.last.qty) : '—') + '</td><td>' + (v.last ? fmtDay(v.last.t) + ' ' + new Date(v.last.t).getFullYear() : '—') + '</td>' +
-        '<td class="n"><b>' + v.score + '</b><small>/20</small></td></tr>';
-      if (open) h += '<tr class="pdrow"><td colspan="' + heads.length + '"><div class="pd-in">' + prioDetail(v) + '</div></td></tr>';
+    for (const u of shown) {
+      const open = S.openPrio.has(u.key);
+      h += '<tr class="prow' + (open ? ' open' : '') + '" data-prio="' + esc(u.key) + '">' +
+        '<td>' + u.rank + '</td><td><b>DES-' + esc(u.design) + '</b></td><td>' + esc(title(u.color)) + '</td><td>' + esc(u.sizes.join(', ')) + '</td>' +
+        '<td class="n">' + (u.last ? nf(u.last.qty) : '—') + '</td><td>' + (u.last ? fmtDay(u.last.t) + ' ' + new Date(u.last.t).getFullYear() : '—') + '</td>' +
+        '<td class="n"><b>' + u.score + '</b><small>/20</small></td></tr>';
+      if (open) h += '<tr class="pdrow"><td colspan="' + heads.length + '"><div class="pd-in">' + prioDetail(u) + '</div></td></tr>';
     }
     h += '</tbody></table></div>';
   }
@@ -3146,12 +3165,14 @@ function prioHowHtml(R) {
   const fmt = PRIO_FMT;
   const line = p => '<li><b>' + p.name + '</b>: 1 = none · ' + scaleTxt(R.cuts[p.k], fmt[p.k]) + '</li>';
   return '<details class="pdx"><summary>How the score works</summary><div class="pd-c">' +
-    'Each measure is ranked across all ' + R.units.length + ' items. An item with none (nothing sold, no customers, nobody came back, nothing pending) scores 1. ' +
-    'The items that have any are ranked and split into four equal groups: bottom quarter 2, then 3, 4, and the top quarter 5. Items with the same value share the middle of the places they take up. ' +
-    'The cut-offs from your current data are below; they move as the data changes. The four scores add up to the total out of 20.' +
+    'One row per design colour, with every size added together. Each measure is ranked across all ' + R.units.length + ' colours. ' +
+    'None (nothing sold, no customers, nobody came back, nothing pending) scores 1; the rest are ranked and split into four equal groups: bottom quarter 2, then 3, 4, and the top quarter 5. ' +
+    'Colours with the same value share the middle of the places they take up. The four scores add up to the total out of 20. Cut-offs from your current data:' +
     '<ul class="pck">' + PRIO_CFG.pillars.map(line).join('') + '</ul>' +
-    'Sell-through = sold since ' + fmtDay(R.start) + ' ÷ (sold + complete sets on the shelf now). Repeat customers = parties who took this item on two or more separate challans. ' +
-    'Last production = the latest purchase inward lot for that colour and size.</div></details>';
+    '<b>Sell-through</b> = (sold since ' + fmtDay(R.start) + ' + pending) ÷ (sold + stock now); it can go above 100% when orders outrun what was made. ' +
+    '<b>Unique customers</b> = parties who bought plus parties with pending orders, each counted once. ' +
+    '<b>Repeat customers</b> = buyers who took the colour on two or more separate challans. ' +
+    'Stock now uses the set-break rule. Last production = the latest purchase inward lot for the colour, all sizes added.</div></details>';
 }
 
 function prioChecksHtml(c) {
@@ -3254,14 +3275,14 @@ $('#exportBtn').addEventListener('click', async () => {
   if (ma.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ma), 'Allotment');
   const PR = S.delRows && S.delRows.length ? prioData() : null;
   if (PR && !PR.empty) {
-    const pr = PR.units.map(v => ({
-      'Rank': v.rank, 'Design Name': 'DES-' + v.design, 'Color': title(v.color), 'Size': v.grp,
-      'Last Production Qty': v.last ? Math.round(v.last.qty) : '', 'Date of Last Production': v.last ? fmtDay(v.last.t) + ' ' + new Date(v.last.t).getFullYear() : '',
-      'Last Production Lot': v.last ? v.last.lot : '',
-      'Sold': Math.round(v.sold), 'Stock Now': Math.round(v.stock), 'Sell-through %': Math.round(100 * v.st), 'Sell-through Score': v.sc.st,
-      'Unique Customers': v.nCust, 'Customer Score': v.sc.cust,
-      'Repeat Customers': v.repeaters.length, 'Repeat %': Math.round(100 * v.rep), 'Repeat Score': v.sc.rep,
-      'Pending Qty': Math.round(v.pending), 'Pending Score': v.sc.pend, 'Total (out of 20)': v.score,
+    const pr = PR.units.map(u => ({
+      'Rank': u.rank, 'Design Name': 'DES-' + u.design, 'Color': title(u.color), 'Size': u.sizes.join(', '),
+      'Last Production Qty': u.last ? Math.round(u.last.qty) : '', 'Date of Last Production': u.last ? fmtDay(u.last.t) + ' ' + new Date(u.last.t).getFullYear() : '',
+      'Last Production Lot': u.last ? u.last.lot : '',
+      'Sold': Math.round(u.sold), 'Pending Qty': Math.round(u.pending), 'Stock Now': Math.round(u.stock), 'Sell-through %': Math.round(100 * u.st), 'Sell-through Score': u.sc.st,
+      'Customers Bought': u.nBought, 'Customers Pending': u.nPend, 'Unique Customers': u.nCust, 'Customer Score': u.sc.cust,
+      'Repeat Customers': u.repeaters.length, 'Repeat %': Math.round(100 * u.rep), 'Repeat Score': u.sc.rep,
+      'Pending Score': u.sc.pend, 'Total (out of 20)': u.score,
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pr), 'Production Priority');
   }
